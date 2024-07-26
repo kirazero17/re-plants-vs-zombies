@@ -371,10 +371,12 @@ void LawnApp::GotFocus()
 //0x44F460
 void LawnApp::LostFocus()
 {
+	/*
 	if (!mTodCheatKeys && CanPauseNow())
 	{
 		DoPauseDialog();
 	}
+	*/
 }
 
 //0x44F480
@@ -746,9 +748,9 @@ void LawnApp::DoPauseDialog()
 	LawnDialog* aDialog = (LawnDialog*)DoDialog(
 		Dialogs::DIALOG_PAUSED,
 		true,
-		_S("Resume Game"/*"[RESUME_GAME]"*/),
+		_S("GAME PAUSED"/*"[RESUME_GAME]"*/),
 		_S("Click to resume game"), 
-		_S("GAME PAUSED"/*"[GAME_PAUSED]"*/), 
+		_S("Resume Game"/*"[GAME_PAUSED]"*/), 
 		Dialog::BUTTONS_FOOTER
 	);
 
