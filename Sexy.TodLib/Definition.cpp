@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include "TodDebug.h"
 #include "Definition.h"
-#include "zlib/zlib.h"
+#include "zlib.h"
 #include "paklib/PakInterface.h"
 #include "misc/PerfTimer.h"
 #include "misc/XMLParser.h"
@@ -163,7 +163,7 @@ void* TodEmitterDefinitionConstructor(void* thePointer)
 {
     if (thePointer)
     {
-        memset(thePointer, NULL, sizeof(TodEmitterDefinition));
+        memset(thePointer, 0, sizeof(TodEmitterDefinition));
         ((TodEmitterDefinition*)thePointer)->mImageFrames = 1;
         ((TodEmitterDefinition*)thePointer)->mEmitterType = EmitterType::EMITTER_BOX;
         ((TodEmitterDefinition*)thePointer)->mName = "";
@@ -531,7 +531,7 @@ uint DefinitionCalcHash(DefMap* theDefMap)
 {
     // Uninitialised!!
     TodList<DefMap*> aProgressMaps = TodList<DefMap*>();
-    uint aResult = DefinitionCalcHashDefMap(crc32(0L, (Bytef*)Z_NULL, NULL) + 1, theDefMap, aProgressMaps);
+    uint aResult = DefinitionCalcHashDefMap(crc32(0L, (Bytef*)Z_NULL, 0) + 1, theDefMap, aProgressMaps);
 
     // TodList destructor is called upon it going out of scope.
     return aResult;
@@ -666,7 +666,7 @@ bool DefinitionIsCompiled(const SexyString& theXMLFilePath)
 
 void DefinitionFillWithDefaults(DefMap* theDefMap, void* theDefinition)
 {
-    memset(theDefinition, NULL, theDefMap->mDefSize);  // 将 theDefinition 初始化填充为 0
+    memset(theDefinition, 0, theDefMap->mDefSize);  // 将 theDefinition 初始化填充为 0
     for (DefField* aField = theDefMap->mMapFields; *aField->mFieldName != '\0'; aField++)  // 遍历 theDefinition 的每一个成员变量
         if (aField->mFieldType == DefFieldType::DT_STRING)
             *(char**)((uintptr_t)theDefinition + aField->mFieldOffset) = (char *)"";  // 将所有 char* 类型的成员变量赋值为空字符数组的指针
