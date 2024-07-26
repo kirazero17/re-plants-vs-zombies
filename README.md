@@ -40,7 +40,7 @@ To play the game using this project you need to have access to the original game
 
 Open the folder containing the `CMakeSettings.json`, wait until cache finishes generating and build the project
 
-### Other (Sublime, Visual Studio Code, etc..)
+### Other (Sublime, Visual Studio Code, MSYS2, etc..)
 
 Run the following commands (assuming you have CMake installed with Ninja) where the `CMakeSettings.json` file is located
 
