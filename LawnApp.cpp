@@ -115,7 +115,7 @@ LawnApp::LawnApp()
 	mSfxVolume = 0.5525;
 	mAutoStartLoadingThread = false;
 	mDebugKeysEnabled = false;
-	mProdName = "PopCap\\PlantsVsZombies";
+	mProdName = "PopCap/PlantsVsZombies";
 	std::string aTitleName = "Plants vs. Zombies";
 #ifdef _DEBUG
 	aTitleName += " BETA ";
@@ -1274,7 +1274,7 @@ void LawnApp::Init()
 	TodLog("session id: %u", mSessionID);
 //#endif
 
-	if (!mResourceManager->ParseResourcesFile("properties\\resources.xml"))
+	if (!mResourceManager->ParseResourcesFile("properties/resources.xml"))
 	{
 		ShowResourceError(true);
 		return;
@@ -1738,7 +1738,7 @@ void LawnApp::LoadingThreadProc()
 	if (!TodLoadResources("LoaderBar"))
 		return;
 
-	TodStringListLoad("Properties\\LawnStrings.txt");
+	TodStringListLoad("Properties/LawnStrings.txt");
 
 	if (mTitleScreen)
 	{

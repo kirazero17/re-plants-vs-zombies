@@ -725,7 +725,7 @@ bool DSoundManager::LoadSound(unsigned int theSfxID, const std::string& theFilen
 		(aFilename[1] != ':'))
 	{
 		// Not an absolute path
-		aCachedName = GetAppDataFolder() + "cached\\" + aFilename + ".wav";
+		aCachedName = GetAppDataFolder() + "cached/" + aFilename + ".wav";
 		if (LoadWAVSound(theSfxID, aCachedName))
 			return true;
 		MkDir(GetFileDir(aCachedName));

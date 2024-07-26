@@ -148,7 +148,7 @@ static void FixFileName(const char* theFileName, char* theUpperName)
 		char aDir[256];
 		getcwd(aDir, 256);  // 取得当前工作路径
 		int aLen = strlen(aDir);
-		aDir[aLen++] = '\\';
+		aDir[aLen++] = '/';
 		aDir[aLen] = 0;
 
 		// 判断 theFileName 文件是否位于当前目录下
@@ -168,7 +168,7 @@ static void FixFileName(const char* theFileName, char* theUpperName)
 		{
 			// 统一转为右斜杠，且多个斜杠的情况下只保留一个
 			if (!lastSlash)
-				*(aDest++) = '\\';
+				*(aDest++) = '/';
 			lastSlash = true;
 		}
 		else if ((c == '.') && (lastSlash) && (*aSrc == '.'))
@@ -371,14 +371,14 @@ bool PakInterface::PFindNext(PFindData* theFindData, LPWIN32_FIND_DATA lpFindFil
 					// Matches before and after star
 					memset(lpFindFileData, 0, sizeof(WIN32_FIND_DATAA));
 					
-					int aLastSlashPos = (int) anItr->second.mFileName.rfind('\\');
+					int aLastSlashPos = (int) anItr->second.mFileName.rfind('/');
 					if (aLastSlashPos == -1)
 						strcpy(lpFindFileData->cFileName, anItr->second.mFileName.c_str());
 					else
 						strcpy(lpFindFileData->cFileName, anItr->second.mFileName.c_str() + aLastSlashPos + 1);
 
 					const char* aEndStr = aFileName + strlen(aFileName) - (theFindData->mFindCriteria.length() - aStarPos) + 1;
-					if (strchr(aEndStr, '\\') != NULL)
+					if (strchr(aEndStr, '/') != NULL)
 						lpFindFileData->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
 					lpFindFileData->nFileSizeLow = aPakRecord->mSize;

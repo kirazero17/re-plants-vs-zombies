@@ -1247,7 +1247,7 @@ void SexyAppBase::DumpProgramInfo()
 		Sleep(100);
 	}
 
-	std::fstream aDumpStream((GetAppDataFolder() + "_dump\\imagelist.html").c_str(), std::ios::out);
+	std::fstream aDumpStream((GetAppDataFolder() + "_dump/imagelist.html").c_str(), std::ios::out);
 
 	time_t aTime;
 	time(&aTime);
@@ -1437,7 +1437,7 @@ void SexyAppBase::DumpProgramInfo()
 				*(aThumbBitsPtr++) = aBits[aSrcX + (aSrcY*aCopiedImage.mWidth)];
 			}
 
-		ImageLib::WriteJPEGImage((GetAppDataFolder() + std::string("_dump\\") + aThumbName).c_str(), &anImageLibImage);
+		ImageLib::WriteJPEGImage((GetAppDataFolder() + std::string("_dump/") + aThumbName).c_str(), &anImageLibImage);
 
 		// Write high resolution image
 
@@ -1446,7 +1446,7 @@ void SexyAppBase::DumpProgramInfo()
 		anFullImage.mWidth = aCopiedImage.GetWidth();
 		anFullImage.mHeight = aCopiedImage.GetHeight();
 
-		ImageLib::WritePNGImage((GetAppDataFolder() + std::string("_dump\\") + anImageName).c_str(), &anFullImage);
+		ImageLib::WritePNGImage((GetAppDataFolder() + std::string("_dump/") + anImageName).c_str(), &anFullImage);
 
 		anFullImage.mBits = NULL;
 
@@ -4059,6 +4059,7 @@ bool SexyAppBase::DebugKeyDown(int theKey)
 {
 	if ((theKey == 'R') && (mWidgetManager->mKeyDown[KEYCODE_MENU]))
 	{	
+/*
 #ifndef RELEASEFINAL
 		if (ReparseModValues())
 			PlaySoundA("c:\\windows\\media\\Windows XP Menu Command.wav", NULL, SND_ASYNC);				
@@ -4068,6 +4069,7 @@ bool SexyAppBase::DebugKeyDown(int theKey)
 				mWidgetManager->mKeyDown[aKeyNum] = false;
 		}
 #endif
+*/
 	}
 	else if (theKey == VK_F3)
 	{
@@ -5698,12 +5700,12 @@ bool SexyAppBase::LoadProperties(const std::string& theFileName, bool required, 
 bool SexyAppBase::LoadProperties()
 {
 	// Load required language-file properties
-	return LoadProperties("properties\\default.xml", true, false);
+	return LoadProperties("properties/default.xml", true, false);
 }
 
 void SexyAppBase::LoadResourceManifest()
 {
-	if (!mResourceManager->ParseResourcesFile("properties\\resources.xml"))
+	if (!mResourceManager->ParseResourcesFile("properties/resources.xml"))
 		ShowResourceError(true);
 }
 
@@ -5949,7 +5951,7 @@ void SexyAppBase::HandleCmdLineParam(const std::string& theParamName, const std:
 
 		int aDemoFileNum = GetMaxDemoFileNum(mDemoPrefix, aNum, true) + 1;
 		mDemoFileName = SexyStringToString(StrFormat(StringToSexyString(mDemoPrefix + "%d.dmo").c_str(),aDemoFileNum));
-		if (mDemoFileName.length() < 2 || (mDemoFileName[1] != ':' && mDemoFileName[2] != '\\'))
+		if (mDemoFileName.length() < 2)
 		{
 			mDemoFileName = GetAppDataFolder() + mDemoFileName;
 		}
@@ -5975,7 +5977,7 @@ void SexyAppBase::HandleCmdLineParam(const std::string& theParamName, const std:
 	else if (theParamName == "-demofile")
 	{
 		mDemoFileName = theParamValue;
-		if (mDemoFileName.length() < 2 || (mDemoFileName[1] != ':' && mDemoFileName[2] != '\\'))
+		if (mDemoFileName.length() < 2)
 		{
 			mDemoFileName = GetAppDataFolder() + mDemoFileName;
 		}
@@ -6070,11 +6072,11 @@ void SexyAppBase::Init()
 			char aPath[MAX_PATH];
 			aFunc(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, aPath);
 
-			std::string aDataPath = RemoveTrailingSlash(aPath) + "\\" + mFullCompanyName + "\\" + mProdName;
-			SetAppDataFolder(aDataPath + "\\");
+			std::string aDataPath = RemoveTrailingSlash(aPath) + "/" + mFullCompanyName + "/" + mProdName;
+			SetAppDataFolder(aDataPath + "/");
 			//MkDir(aDataPath);
 			//AllowAllAccess(aDataPath);
-			if (mDemoFileName.length() < 2 || (mDemoFileName[1] != ':' && mDemoFileName[2] != '\\'))
+			if (mDemoFileName.length() < 2)
 			{
 				mDemoFileName = GetAppDataFolder() + mDemoFileName;
 			}

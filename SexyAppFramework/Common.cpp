@@ -103,7 +103,7 @@ void Sexy::SetAppDataFolder(const std::string& thePath)
 		if (!aPath.empty())
 		{
 			if (aPath[aPath.length()-1] != '\\' && aPath[aPath.length()-1] != '/')
-				aPath += '\\';
+				aPath += '/';
 		}
 
 		Sexy::gAppDataFolder = aPath;
@@ -538,8 +538,8 @@ std::string Sexy::GetPathFrom(const std::string& theRelPath, const std::string& 
 
 	char aSlashChar = '/';
 
-	if ((theRelPath.find('\\') != (size_t)-1) || (theDir.find('\\') != (size_t)-1))
-		aSlashChar = '\\';	
+	//if ((theRelPath.find('\\') != (size_t)-1) || (theDir.find('\\') != (size_t)-1))
+		//aSlashChar = '\\';
 
 	if ((aNewPath.length() >= 2) && (aNewPath[1] == ':'))
 	{
@@ -724,7 +724,7 @@ bool Sexy::Deltree(const std::string& thePath)
 
 	if ((aSourceDir[aSourceDir.length() - 1] != '\\') ||
 		(aSourceDir[aSourceDir.length() - 1] != '/'))
-		aSourceDir += "\\";		
+		aSourceDir += "/";
 	
 	WIN32_FIND_DATAA aFindData;
 
@@ -841,7 +841,7 @@ std::string	Sexy::AddTrailingSlash(const std::string& theDirectory, bool backSla
 	{
 		char aChar = theDirectory[theDirectory.length()-1];
 		if (aChar!='\\' && aChar!='/')
-			return theDirectory + (backSlash?'\\':'/');
+			return theDirectory + '/';
 		else
 			return theDirectory;
 	}

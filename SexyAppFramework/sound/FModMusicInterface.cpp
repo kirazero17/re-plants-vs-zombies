@@ -38,7 +38,7 @@ FSOUND_SAMPLE* FModMusicInterface::LoadFMODSample(const std::string& theFileName
 	if (aLastSlashPos < 0)
 		aLastSlashPos = 0;
 
-	std::string aCachedName = GetAppDataFolder() + "cached\\" + GetFileName(theFileName, true) + ".wav";
+	std::string aCachedName = GetAppDataFolder() + "cached/" + GetFileName(theFileName, true) + ".wav";
 	MkDir(GetFileDir(aCachedName));
 
 	FSOUND_SAMPLE* aSample = gFMod->FSOUND_Sample_Load(FSOUND_FREE, aCachedName.c_str(), 0, 0);

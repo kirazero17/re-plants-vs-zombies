@@ -121,8 +121,8 @@ void SexyApp::ReadFromRegistry()
 
 		char aFileName[256];
 		GetWindowsDirectory(aFileName, 256);
-		if (aFileName[strlen(aFileName)-1] != '\\')
-			strcat(aFileName, "\\");
+		if (aFileName[strlen(aFileName)-1] != '/')
+			strcat(aFileName, "/");
 		strcat(aFileName, "popcinfo.dat");
 
 		FILE* fp = fopen(aFileName, "rb");
@@ -232,8 +232,8 @@ void SexyApp::WriteToRegistry()
 	{
 		char aFileName[256];
 		GetWindowsDirectory(aFileName, 256);
-		if (aFileName[strlen(aFileName)-1] != '\\')
-			strcat(aFileName, "\\");
+		if (aFileName[strlen(aFileName)-1] != '/')
+			strcat(aFileName, "/");
 		strcat(aFileName, "popcinfo.dat");
 
 		FILE* fp = fopen(aFileName, "r+b");
@@ -305,12 +305,12 @@ bool SexyApp::OpenHTMLTemplate(const std::string& theTemplateFile, const Defines
 		return false;
 
 	WIN32_FIND_DATA aFindData;
-	HANDLE aHandle = FindFirstFile("temp\\tpl*.html", &aFindData);
+	HANDLE aHandle = FindFirstFile("temp/tpl*.html", &aFindData);
 	if (aHandle != NULL)
 	{
 		do
 		{
-			std::string aFilePath = std::string("temp\\") + aFindData.cFileName;
+			std::string aFilePath = std::string("temp/") + aFindData.cFileName;
 			DeleteFile(aFilePath.c_str());
 		}
 		while (FindNextFile(aHandle, &aFindData));
@@ -320,7 +320,7 @@ bool SexyApp::OpenHTMLTemplate(const std::string& theTemplateFile, const Defines
 
 	mkdir("temp");
 
-	std::string anOutFilename = StrFormat("temp\\tpl%04d.html", rand()%10000);
+	std::string anOutFilename = StrFormat("temp/tpl%04d.html", rand()%10000);
 
 	//TODO: A better failover case?
 	std::fstream anOutStream(anOutFilename.c_str(), std::ios::out);
@@ -570,7 +570,7 @@ void SexyApp::InitPropertiesHook()
 {
 	// Load properties if we need to
 	bool checkSig = !IsScreenSaver();
-	LoadProperties("properties\\partner.xml", false, checkSig);
+	LoadProperties("properties/partner.xml", false, checkSig);
 
 	// Check to see if this build is unlocked.
 	if (GetBoolean("NoReg", false))

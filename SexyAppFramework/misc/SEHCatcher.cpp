@@ -637,7 +637,7 @@ bool SEHCatcher::GetLogicalAddress(void* addr, char* szModule, DWORD len, DWORD&
 
 std::string SEHCatcher::GetFilename(const std::string& thePath)
 {
-	int aLastSlash = std::max((int) thePath.rfind('\\'), (int) thePath.rfind('/')); 
+	int aLastSlash = (int) thePath.rfind('/');
 
 	if (aLastSlash >= 0)
 	{
