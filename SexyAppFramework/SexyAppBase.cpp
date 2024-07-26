@@ -252,7 +252,7 @@ SexyAppBase::SexyAppBase()
 	mMuteCount = 0;	
 	mAutoMuteCount = 0;
 	mDemoMute = false;
-	mMuteOnLostFocus = true;
+	mMuteOnLostFocus = false;
 	mCurHandleNum = 0;
 	mFPSTime = 0;
 	mFPSStartTick = GetTickCount();
