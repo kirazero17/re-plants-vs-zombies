@@ -399,6 +399,7 @@ void SEHCatcher::DoHandleDebugEvent(LPEXCEPTION_POINTERS lpEP)
 
 	aDebugDump += "\r\n";
 
+#if __x86_64__
 	sprintf(aBuffer, ("RAX:%016llX RBX:%016llX RCX:%016llX RDX:%016llX RSI:%016llX RDI:%016llX\r\n"),
 			lpEP->ContextRecord->Rax, lpEP->ContextRecord->Rbx, lpEP->ContextRecord->Rcx, lpEP->ContextRecord->Rdx, lpEP->ContextRecord->Rsi, lpEP->ContextRecord->Rdi);
 	aDebugDump += aBuffer;
@@ -407,6 +408,13 @@ void SEHCatcher::DoHandleDebugEvent(LPEXCEPTION_POINTERS lpEP)
 	aDebugDump += aBuffer;
 	sprintf(aBuffer, "RIP:%016llX RSP:%016llX  RBP:%016llX\r\n", lpEP->ContextRecord->Rip, lpEP->ContextRecord->Rsp, lpEP->ContextRecord->Rbp); 
 	aDebugDump += aBuffer;
+#else
+	sprintf(aBuffer, ("EAX:%016llX EBX:%016llX ECX:%016llX EDX:%016llX ESI:%016llX EDI:%016llX\r\n"),
+			lpEP->ContextRecord->Eax, lpEP->ContextRecord->Ebx, lpEP->ContextRecord->Ecx, lpEP->ContextRecord->Edx, lpEP->ContextRecord->Esi, lpEP->ContextRecord->Edi);
+	aDebugDump += aBuffer;
+	sprintf(aBuffer, "EIP:%016llX ESP:%016llX  EBP:%016llX\r\n", lpEP->ContextRecord->Eip, lpEP->ContextRecord->Esp, lpEP->ContextRecord->Ebp);
+	aDebugDump += aBuffer;
+#endif
 	sprintf(aBuffer, "CS:%04X SS:%04X DS:%04X ES:%04X FS:%04X GS:%04X\r\n", lpEP->ContextRecord->SegCs, lpEP->ContextRecord->SegSs, lpEP->ContextRecord->SegDs, lpEP->ContextRecord->SegEs, lpEP->ContextRecord->SegFs, lpEP->ContextRecord->SegGs );
 	aDebugDump += aBuffer;
 	sprintf(aBuffer, "Flags:%08lX\r\n", lpEP->ContextRecord->EFlags );
@@ -474,10 +482,14 @@ std::string SEHCatcher::IntelWalk(PCONTEXT theContext)
 	std::string aDebugDump;
 	char aBuffer[2048];
 
-	intptr_t pc = theContext->Rip;
 	intptr_t *pFrame, *pPrevFrame;
-	
+#if __x86_64__
+	intptr_t pc = theContext->Rip;
 	pFrame = (intptr_t*)theContext->Rbp;
+#else
+	intptr_t pc = theContext->Eip;
+	pFrame = (intptr_t*)theContext->Ebp;
+#endif
 
 	for (;;)
 	{
@@ -520,11 +532,17 @@ std::string SEHCatcher::ImageHelpWalk(PCONTEXT theContext, int theSkipCount)
 
 	// Initialize the STACKFRAME structure for the first call.  This is only
 	// necessary for Intel CPUs, and isn't mentioned in the documentation.
+#if __x86_64__
 	sf.AddrPC.Offset       = theContext->Rip;
-	sf.AddrPC.Mode         = AddrModeFlat;
 	sf.AddrStack.Offset    = theContext->Rsp;
-	sf.AddrStack.Mode      = AddrModeFlat;
 	sf.AddrFrame.Offset    = theContext->Rbp;
+#else
+	sf.AddrPC.Offset       = theContext->Eip;
+	sf.AddrStack.Offset    = theContext->Esp;
+	sf.AddrFrame.Offset    = theContext->Ebp;
+#endif
+	sf.AddrPC.Mode         = AddrModeFlat;
+	sf.AddrStack.Mode      = AddrModeFlat;
 	sf.AddrFrame.Mode      = AddrModeFlat;
 	
 	int aLevelCount = 0;

@@ -23,9 +23,13 @@ typedef BOOL (__stdcall * STACKWALKPROC)
             PREAD_PROCESS_MEMORY_ROUTINE,PFUNCTION_TABLE_ACCESS_ROUTINE,
             PGET_MODULE_BASE_ROUTINE, PTRANSLATE_ADDRESS_ROUTINE);
 
+#if __x86_64__
 typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC)(HANDLE, uintptr_t);
-
 typedef uintptr_t (__stdcall *SYMGETMODULEBASEPROC)(HANDLE, uintptr_t);
+#else
+typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC)(HANDLE, long unsigned int);
+typedef long unsigned int (__stdcall *SYMGETMODULEBASEPROC)(HANDLE, long unsigned int);
+#endif
 
 typedef BOOL (__stdcall *SYMGETSYMFROMADDRPROC)(HANDLE, uintptr_t, PDWORD, PIMAGEHLP_SYMBOL);
 

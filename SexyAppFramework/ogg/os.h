@@ -17,8 +17,11 @@
 
  ********************************************************************/
 
-#include <math.h>
+#ifndef __i386__
 #define __i386__
+#endif
+
+#include <math.h>
 #include "os_types.h"
 
 #ifndef _V_IFDEFJAIL_H_
