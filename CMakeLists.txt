@@ -37,7 +37,7 @@ target_include_directories(re-plants-vs-zombies PRIVATE ${PROJECT_SOURCE_DIR}/Se
 target_compile_definitions(re-plants-vs-zombies PRIVATE _DEBUG)
 
 target_link_libraries(re-plants-vs-zombies jpeg png z)
-#target_link_options(re-plants-vs-zombies PRIVATE -static-libstdc++)
+target_link_options(re-plants-vs-zombies PRIVATE -static -static-libgcc -static-libstdc++)
 
 if (WIN32)
 	target_link_libraries(re-plants-vs-zombies ws2_32 ddraw dinput8 dxguid dxerr8 user32 gdi32 winmm)
