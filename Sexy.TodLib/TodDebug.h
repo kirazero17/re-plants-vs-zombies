@@ -1,9 +1,6 @@
 #ifndef __TODDEBUG_H__
 #define __TODDEBUG_H__
 
-#define NOMINMAX 1
-#include <windows.h>
-
 class TodHesitationBracket
 {
 public:
@@ -24,10 +21,8 @@ void				TodTraceMemory();
 void				TodTraceAndLog(const char* theFormat, ...);
 void				TodTraceWithoutSpamming(const char* theFormat, ...);
 void				TodHesitationTrace(...);
-void				TodReportError(LPEXCEPTION_POINTERS exceptioninfo, const char* theMessage);
 void				TodAssertFailed(const char* theCondition, const char* theFile, int theLine, const char* theMsg = "", ...);
 /*inline*/ void		TodErrorMessageBox(const char* theMessage, const char* theTitle);
-long __stdcall		TodUnhandledExceptionFilter(LPEXCEPTION_POINTERS exceptioninfo);
 
 /*inline*/ void*	TodMalloc(int theSize);
 /*inline*/ void		TodFree(void* theBlock);

@@ -1,8 +1,9 @@
 #include <time.h>
+#include <inttypes.h>
+#include <stdexcept>
 #include "TodDebug.h"
 #include "TodCommon.h"
 #include "misc/Debug.h"
-#include "misc/SEHCatcher.h"
 #include "../SexyAppFramework/SexyAppBase.h"
 
 using namespace Sexy;
@@ -13,9 +14,7 @@ static char gDebugDataFolder[MAX_PATH];
 //0x514EA0
 void TodErrorMessageBox(const char* theMessage, const char* theTitle)
 {
-	HWND hWnd = (gSexyAppBase && gSexyAppBase->mHWnd) ? gSexyAppBase->mHWnd : GetActiveWindow();
-	TodTraceAndLog("%s.%s", theMessage, theTitle);
-	MessageBoxA(hWnd, theMessage, theTitle, MB_ICONEXCLAMATION);
+	throw std::runtime_error("Error Box\n--" + std::string(theTitle) + "--\n" + theMessage);
 }
 
 void TodTraceMemory()
@@ -70,31 +69,7 @@ void TodAssertFailed(const char* theCondition, const char* theFile, int theLine,
 	}
 	TodTrace("%s", aBuffer);
 
-	if (!IsDebuggerPresent())
-	{
-		if (gInAssert)
-		{
-			TodLog("Assert during exception processing");
-			exit(0);
-		}
-
-		/*
-		gInAssert = true;
-		LPEXCEPTION_POINTERS exp;
-
-		__try
-		{
-			RaiseException(EXCEPTION_NONCONTINUABLE_EXCEPTION, NULL, NULL, NULL);
-		}
-		__except (exp = GetExceptionInformation(), EXCEPTION_CONTINUE_EXECUTION)
-		{
-			TodReportError(exp, aFormattedMsg);
-		}
-
-		gInAssert = false;
-		*/
-		exit(0);
-	}
+	exit(0);
 }
 
 void TodLog(const char* theFormat, ...)
@@ -126,12 +101,13 @@ void TodLogString(const char* theMsg)
 	FILE* f = fopen(gLogFileName, "a");
 	if (f == nullptr)
 	{
-		OutputDebugString(_S("Failed to open log file\n"));
+		fprintf(stderr, _S("Failed to open log file\n"));
+		return;
 	}
 
 	if (fwrite(theMsg, strlen(theMsg), 1, f) != 1)
 	{
-		OutputDebugString(_S("Failed to write to log file\n"));
+		fprintf(stderr, _S("Failed to write to log file\n"));
 	}
 
 	fclose(f);
@@ -158,7 +134,7 @@ void TodTrace(const char* theFormat, ...)
 		}
 	}
 
-	OutputDebugStringA(aButter);
+	printf(aButter);
 }
 
 void TodHesitationTrace(...)
@@ -186,14 +162,14 @@ void TodTraceAndLog(const char* theFormat, ...)
 		}
 	}
 
-	OutputDebugStringA(aButter);
+	printf(aButter);
 	TodLogString(aButter);
 }
 
 void TodTraceWithoutSpamming(const char* theFormat, ...)
 {
-	static __time64_t gLastTraceTime = 0LL;
-	__time64_t aTime = _time64(nullptr);
+	static uint64_t gLastTraceTime = 0LL;
+	uint64_t aTime = time(NULL);
 	if (aTime < gLastTraceTime)
 	{
 		return;
@@ -219,30 +195,7 @@ void TodTraceWithoutSpamming(const char* theFormat, ...)
 		}
 	}
 
-	OutputDebugStringA(aButter);
-}
-
-void TodReportError(LPEXCEPTION_POINTERS exceptioninfo, const char* theMessage)
-{
-	(void)theMessage;
-	Sexy::SEHCatcher::UnhandledExceptionFilter(exceptioninfo);
-}
-
-long __stdcall TodUnhandledExceptionFilter(LPEXCEPTION_POINTERS exceptioninfo)
-{
-	if (gInAssert)
-	{
-		TodLog("Exception during exception processing");
-	}
-	else
-	{
-		gInAssert = true;
-		TodLog("\nUnhandled Exception");
-		TodReportError(exceptioninfo, "Unhandled Exception");
-		gInAssert = false;
-	}
-
-	return EXCEPTION_EXECUTE_HANDLER;
+	printf(aButter);
 }
 
 void TodAssertInitForApp()
@@ -254,8 +207,5 @@ void TodAssertInitForApp()
 	strcpy(gLogFileName + strlen(gLogFileName), "log.txt");
 	TOD_ASSERT(strlen(gLogFileName) < MAX_PATH);
 
-	__time64_t aclock = _time64(nullptr);
-	TodLog("Started %s\n", asctime(_localtime64(&aclock)));
-
-	SetUnhandledExceptionFilter(TodUnhandledExceptionFilter);
+	TodLog("Started %s\n", (uint64_t)time(NULL));
 }
