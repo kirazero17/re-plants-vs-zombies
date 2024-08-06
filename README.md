@@ -1,3 +1,12 @@
+# re-plants-vs-zombies fork
+
+Fork of Patoke's PVZ GOTY decompilation with the following objectives:
+* Replace renderer with SDL + OpenGL
+* Replace Windows code with cross-platform code
+* Replace DirectSound/BASS/FMod with SDL mixer
+* (Maybe) Port the game to videogame consoles
+
+Original README continues below
 
 # re-plants-vs-zombies
 
