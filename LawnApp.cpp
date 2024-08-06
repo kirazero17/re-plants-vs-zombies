@@ -1930,7 +1930,10 @@ void LawnApp::ButtonDepress(int theId)
 
 		case Dialogs::DIALOG_QUIT:
 			KillDialog(Dialogs::DIALOG_QUIT);
-			SendMessage(mHWnd, WM_CLOSE, 0, 0);
+			{
+				SDL_Event event = {.quit={SDL_QUIT, SDL_GetTicks()}};
+				SDL_PushEvent(&event);
+			}
 			return;
 
 		case Dialogs::DIALOG_NAG:

@@ -56,7 +56,7 @@ BassMusicInterface::BassMusicInterface(HWND theHWnd)
 
 	BOOL success;(void)success;
 
-	success = gBass->BASS_Init(1, 44100, 0, theHWnd, NULL);
+	success = gBass->BASS_Init(1, 44100, 0, 0, NULL);
 	gBass->BASS_SetConfig(BASS_CONFIG_BUFFER, 2000);	
 
 	mixerSetControlDetails(phmx, &mcd, 0L);

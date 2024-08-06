@@ -9,13 +9,12 @@
 #include "../GameConstants.h"
 #include "graphics/Font.h"
 #include "misc/Debug.h"
-#include "graphics/DDImage.h"
+#include "graphics/GLImage.h"
 #include "graphics/Graphics.h"
 #include "graphics/ImageFont.h"
 #include "misc/PerfTimer.h"
 #include "misc/SexyMatrix.h"
-#include "graphics/DDInterface.h"
-#include "graphics/D3DInterface.h"
+#include "graphics/GLInterface.h"
 
 //0x510BC0
 void Tod_SWTri_AddAllDrawTriFuncs()
@@ -735,10 +734,10 @@ void TodBltMatrix(Graphics* g, Image* theImage, const SexyMatrix3& theTransform,
 	{
 		g->mDestImage->BltMatrix(theImage, aOffsetX, aOffsetY, theTransform, theClipRect, theColor, theDrawMode, theSrcRect, g->mLinearBlend);
 	}
-	else if (DDImage::Check3D(g->mDestImage))
+	else if (GLImage::Check3D(g->mDestImage))
 	{
 		theImage->mDrawn = true;
-		D3DInterface* aInterface = ((DDImage*)g->mDestImage)->mDDInterface->mD3DInterface;
+		GLInterface* aInterface = ((GLImage*)g->mDestImage)->mGLInterface;
 		aInterface->BltTransformed(theImage, nullptr, theColor, theDrawMode, theSrcRect, theTransform, g->mLinearBlend, aOffsetX, aOffsetY, true);
 	}
 	else
@@ -1148,7 +1147,7 @@ bool TodResourceManager::TodLoadNextResource()
 		case ResType_Image:
 		{
 			ImageRes* anImageRes = (ImageRes*)aRes;
-			if ((DDImage*)anImageRes->mImage != nullptr)
+			if ((GLImage*)anImageRes->mImage != nullptr)
 			{
 				mCurResGroupListItr++;
 				continue;

@@ -249,7 +249,7 @@ void ButtonWidget::MouseDown(int theX, int theY, int theBtnNum, int theClickCoun
 void ButtonWidget::MouseUp(int theX, int theY, int theBtnNum, int theClickCount)
 {	
 	Widget::MouseUp(theX, theY, theBtnNum, theClickCount);
-	
+
 	if (mIsOver && mWidgetManager->mHasFocus)
 		mButtonListener->ButtonDepress(mId);
 	

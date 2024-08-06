@@ -1,11 +1,10 @@
 #include "SysFont.h"
-#include "DDImage.h"
+#include "GLImage.h"
 #include "SexyAppBase.h"
 #include "Graphics.h"
 #include "ImageFont.h"
 #include "MemoryImage.h"
-#include "D3DInterface.h"
-#include "graphics/DDInterface.h"
+#include "GLInterface.h"
 #include "widget/WidgetManager.h"
 #include <stdlib.h>
 
@@ -188,6 +187,7 @@ int	SysFont::StringWidth(const SexyString& theString)
 
 void SysFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect)
 {
+	/*
 	DDImage* aDDImage = dynamic_cast<DDImage*>(g->mDestImage);
 
 	if (aDDImage != NULL)
@@ -314,6 +314,7 @@ void SysFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theS
 		DeleteObject(blackBitmap);
 		DeleteDC(aDC);
 	}
+	*/
 }
 
 _Font* SysFont::Duplicate()
