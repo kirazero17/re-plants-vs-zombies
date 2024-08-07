@@ -3244,6 +3244,7 @@ void LawnApp::PreloadForUser()
 //0x455930
 void LawnApp::EnforceCursor()
 {
+	/*
 	if (mSEHOccured || !mMouseIn)
 	{
 		::SetCursor(LoadCursor(NULL, IDC_ARROW));
@@ -3314,6 +3315,7 @@ void LawnApp::EnforceCursor()
 		::SetCursor(LoadCursor(NULL, IDC_ARROW));
 		return;
 	}
+	*/
 }
 
 //0x455AA0
