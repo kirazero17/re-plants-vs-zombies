@@ -4272,6 +4272,42 @@ bool SexyAppBase::ProcessDeferredMessages(bool singleMessage)
 				break;
 			}
 
+			case SDL_KEYDOWN:
+				mLastUserInputTick = mLastTimerTime;
+
+				/*
+				if (wParam==VK_RETURN && uMsg==WM_SYSKEYDOWN && !mForceFullscreen && !mForceWindowed && mAllowAltEnter)
+				{
+					SwitchScreenMode(!mIsWindowed);
+					ClearKeysDown();
+					break;
+				}
+				else if ((wParam == 'D') && (mWidgetManager != NULL) && (mWidgetManager->mKeyDown[KEYCODE_CONTROL]) && (mWidgetManager->mKeyDown[KEYCODE_MENU]))
+				{
+					PlaySoundA("c:\\windows\\media\\Windows XP Menu Command.wav", NULL, SND_ASYNC);
+					mDebugKeysEnabled = !mDebugKeysEnabled;
+				}
+
+				if (mDebugKeysEnabled)
+				{
+					if (DebugKeyDown(wParam))
+						break;
+				}
+				*/
+
+				mWidgetManager->KeyDown((KeyCode)event.key.keysym.sym);
+				break;
+
+			case SDL_KEYUP:
+				mLastUserInputTick = mLastTimerTime;
+				mWidgetManager->KeyUp((KeyCode)event.key.keysym.sym);
+				break;
+
+			case SDL_TEXTINPUT:
+				mLastUserInputTick = mLastTimerTime;
+				mWidgetManager->KeyChar((SexyChar)event.text.text[0]);
+				break;
+
 			/*
 			case WM_MOUSEWHEEL:
 				{

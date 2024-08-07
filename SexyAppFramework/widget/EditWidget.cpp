@@ -190,7 +190,8 @@ void EditWidget::GotFocus()
 		UpdateCaretPos();
 		ShowCaret(anApp->mHWnd);
 	}
-	
+
+	SDL_StartTextInput();
 	mShowingCursor = true;
 	mBlinkAcc = 0;
 	MarkDirty();	
@@ -206,6 +207,7 @@ void EditWidget::LostFocus()
 		DestroyCaret();
 	}
 
+	SDL_StopTextInput();
 	mShowingCursor = false;	
 	MarkDirty();
 }
