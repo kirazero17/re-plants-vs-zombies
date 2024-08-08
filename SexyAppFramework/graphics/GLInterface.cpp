@@ -670,6 +670,213 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 	}
 }
 
+struct GLVertex
+{
+	float sx;
+	float sy;
+	float sz;
+	float rhw;
+	uint32_t color;
+	uint32_t specular;
+	float tu;
+	float tv;
+};
+
+struct VertexList
+{
+	enum { MAX_STACK_VERTS = 100 };
+	GLVertex mStackVerts[MAX_STACK_VERTS];
+	GLVertex* mVerts;
+	int mSize;
+	int mCapacity;
+
+	typedef int size_type;
+
+	VertexList() : mVerts(mStackVerts), mSize(0), mCapacity(MAX_STACK_VERTS) { }
+	VertexList(const VertexList& theList) : mVerts(mStackVerts), mSize(theList.mSize), mCapacity(MAX_STACK_VERTS)
+	{
+		reserve(mSize);
+		memcpy(mVerts, theList.mVerts, mSize * sizeof(mVerts[0]));
+	}
+
+	~VertexList()
+	{
+		if (mVerts != mStackVerts)
+			delete mVerts;
+	}
+
+	void reserve(int theCapacity)
+	{
+		if (mCapacity < theCapacity)
+		{
+			mCapacity = theCapacity;
+			GLVertex* aNewList = new GLVertex[theCapacity];
+			memcpy(aNewList, mVerts, mSize * sizeof(mVerts[0]));
+			if (mVerts != mStackVerts)
+				delete mVerts;
+
+			mVerts = aNewList;
+		}
+	}
+
+	void push_back(const GLVertex& theVert)
+	{
+		if (mSize == mCapacity)
+			reserve(mCapacity * 2);
+
+		mVerts[mSize++] = theVert;
+	}
+
+	void operator=(const VertexList& theList)
+	{
+		reserve(theList.mSize);
+		mSize = theList.mSize;
+		memcpy(mVerts, theList.mVerts, mSize * sizeof(mVerts[0]));
+	}
+
+
+	GLVertex& operator[](int thePos)
+	{
+		return mVerts[thePos];
+	}
+
+	int size() { return mSize; }
+	void clear() { mSize = 0; }
+};
+
+static inline float GetCoord(const GLVertex& theVertex, int theCoord)
+{
+	switch (theCoord)
+	{
+	case 0: return theVertex.sx;
+	case 1: return theVertex.sy;
+	case 2: return theVertex.sz;
+	case 3: return theVertex.tu;
+	case 4: return theVertex.tv;
+	default: return 0;
+	}
+}
+
+static inline GLVertex Interpolate(const GLVertex &v1, const GLVertex &v2, float t)
+{
+	GLVertex aVertex = v1;
+	aVertex.sx = v1.sx + t*(v2.sx-v1.sx);
+	aVertex.sy = v1.sy + t*(v2.sy-v1.sy);
+	aVertex.tu = v1.tu + t*(v2.tu-v1.tu);
+	aVertex.tv = v1.tv + t*(v2.tv-v1.tv);
+	if (v1.color!=v2.color)
+	{
+		int r = ((v1.color >> 0) & 0xff) + t*( ((v2.color >> 0) & 0xff) - ((v1.color >> 0) & 0xff) );
+		int g = ((v1.color >> 8) & 0xff) + t*( ((v2.color >> 8) & 0xff) - ((v1.color >> 8) & 0xff) );
+		int b = ((v1.color >> 16) & 0xff) + t*( ((v2.color >> 16) & 0xff) - ((v1.color >> 16) & 0xff) );
+		int a = ((v1.color >> 24) & 0xff) + t*( ((v2.color >> 24) & 0xff) - ((v1.color >> 24) & 0xff) );
+		aVertex.color = (r << 0) | (g << 8) | (b << 16) | (a << 24);
+	}
+
+	return aVertex;
+}
+
+template<class Pred>
+struct PointClipper
+{
+	Pred mPred;
+
+	void ClipPoint(int n, float clipVal, const GLVertex& v1, const GLVertex& v2, VertexList& out)
+	{
+		if (!mPred(GetCoord(v1, n), clipVal))
+		{
+			if (!mPred(GetCoord(v2, n), clipVal)) // both inside
+				out.push_back(v2);
+			else // inside -> outside
+			{
+				float t = (clipVal - GetCoord(v1, n)) / (GetCoord(v2, n) - GetCoord(v1, n));
+				out.push_back(Interpolate(v1, v2, t));
+			}
+		}
+		else
+		{
+			if (!mPred(GetCoord(v2, n), clipVal)) // outside -> inside
+			{
+				float t = (clipVal - GetCoord(v1, n)) / (GetCoord(v2, n) - GetCoord(v1, n));
+				out.push_back(Interpolate(v1, v2, t));
+				out.push_back(v2);
+			}
+			//			else // outside -> outside
+		}
+	}
+
+	void ClipPoints(int n, float clipVal, VertexList& in, VertexList& out)
+	{
+		if (in.size() < 2)
+			return;
+
+		ClipPoint(n, clipVal, in[in.size() - 1], in[0], out);
+		for (VertexList::size_type i = 0; i < in.size() - 1; i++)
+			ClipPoint(n, clipVal, in[i], in[i + 1], out);
+	}
+};
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
+{
+	VertexList l1, l2;
+	l1 = theList;
+
+	int left = theClipRect->mX;
+	int right = left + theClipRect->mWidth;
+	int top = theClipRect->mY;
+	int bottom = top + theClipRect->mHeight;
+
+	VertexList *in = &l1, *out = &l2;
+	PointClipper<std::less<float> > aLessClipper;
+	PointClipper<std::greater_equal<float> > aGreaterClipper;
+
+	aLessClipper.ClipPoints(0,left,*in,*out); std::swap(in,out); out->clear();
+	aLessClipper.ClipPoints(1,top,*in,*out); std::swap(in,out); out->clear();
+	aGreaterClipper.ClipPoints(0,right,*in,*out); std::swap(in,out); out->clear();
+	aGreaterClipper.ClipPoints(1,bottom,*in,*out);
+
+	VertexList &aList = *out;
+
+	if (aList.size() >= 3)
+	{
+		glBegin(GL_TRIANGLE_FAN);
+		for (unsigned i=0; i<aList.size(); i++)
+		{
+			GLVertex& v = aList[i];
+
+			glColor4ubv((uint8_t*)&v.color);
+			glTexCoord2f(v.tu, v.tv);
+			glVertex2f(v.sx, v.sy);
+		}
+		glEnd();
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+static void DoPolyTextureClip(VertexList &theList)
+{
+	VertexList l2;
+
+	float left = 0;
+	float right = 1;
+	float top = 0;
+	float bottom = 1;
+
+	VertexList *in = &theList, *out = &l2;
+	PointClipper<std::less<float> > aLessClipper;
+	PointClipper<std::greater_equal<float> > aGreaterClipper;
+
+	aLessClipper.ClipPoints(3,left,*in,*out); std::swap(in,out); out->clear();
+	aLessClipper.ClipPoints(4,top,*in,*out); std::swap(in,out); out->clear();
+	aGreaterClipper.ClipPoints(3,right,*in,*out); std::swap(in,out); out->clear();
+	aGreaterClipper.ClipPoints(4,bottom,*in,*out);
+}
+
+
 void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrcRect, const Color& theColor, const Rect *theClipRect, float theX, float theY, bool center)
 {
 	int srcLeft = theSrcRect.mX;
@@ -694,7 +901,7 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 	srcY = srcTop;
 	dstY = starty;
 
-	//long unsigned int aColor = RGBA_MAKE(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);			
+	long unsigned int aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
 
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
@@ -742,31 +949,28 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 				}
 			}
 
+			GLVertex aVertex[4] = {
+				{ {tp[0].x},{tp[0].y},{0},{1},{aColor},{0},{u1},{v1} },
+				{ {tp[1].x},{tp[1].y},{0},{1},{aColor},{0},{u1},{v2} },
+				{ {tp[2].x},{tp[2].y},{0},{1},{aColor},{0},{u2},{v1} },
+				{ {tp[3].x},{tp[3].y},{0},{1},{aColor},{0},{u2},{v2} }
+			};
+
 			glBindTexture(GL_TEXTURE_2D, aTexture);
 
 			if (!clipped)
 			{
 				glBegin(GL_TRIANGLE_STRIP);
-					glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
-					glTexCoord2f(u1, v1);
-					glVertex2f(tp[0].x, tp[0].y);
-
-					glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
-					glTexCoord2f(u1, v2);
-					glVertex2f(tp[1].x, tp[1].y);
-
-					glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
-					glTexCoord2f(u2, v1);
-					glVertex2f(tp[2].x, tp[2].y);
-
-					glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
-					glTexCoord2f(u2, v2);
-					glVertex2f(tp[3].x, tp[3].y);
+				for (int i=0; i<4; i++)
+				{
+					glColor4ubv((uint8_t*)&aVertex[i].color);
+					glTexCoord2f(aVertex[i].tu, aVertex[i].tv);
+					glVertex2f(aVertex[i].sx, aVertex[i].sy);
+				}
 				glEnd();
 			}
 			else
 			{
-				/*
 				VertexList aList;
 				aList.push_back(aVertex[0]);
 				aList.push_back(aVertex[1]);
@@ -774,7 +978,6 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 				aList.push_back(aVertex[2]);
 
 				DrawPolyClipped(theClipRect, aList);
-				*/
 //				DrawPolyClipped(theDevice, theClipRect, aVertex+1, 3);
 			}
 
@@ -807,12 +1010,8 @@ void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTrian
 			for (int i = 0; i < 3; i++)
 			{
 				unsigned int aColor = GetColorFromTriVertex(aTriVerts[i], theColor);
-				uint8_t r = (aColor >> 0) & 0xff;
-				uint8_t g = (aColor >> 8) & 0xff;
-				uint8_t b = (aColor >> 16) & 0xff;
-				//uint8_t a = (aColor >> 24) & 0xff;
 
-				glColor3ub(r, g, b);
+				glColor4ubv((uint8_t*)&aColor);
 				glTexCoord2f(aTriVerts[i].u * mMaxTotalU, aTriVerts[i].v * mMaxTotalV);
 				glVertex2f(aTriVerts[i].x + tx, aTriVerts[i].y + ty);
 			}
@@ -822,10 +1021,92 @@ void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTrian
 	}
 	else
 	{
-		printf("bruh %d\n", theNumTriangles);
 		for (int aTriangleNum = 0; aTriangleNum < theNumTriangles; aTriangleNum++)
 		{
 			TriVertex* aTriVerts = (TriVertex*) theVertices[aTriangleNum];
+
+			GLVertex aVertex[3] = {
+				{ {aTriVerts[0].x + tx},{aTriVerts[0].y + ty},	{0},{1},{GetColorFromTriVertex(aTriVerts[0],theColor)},	{0},{aTriVerts[0].u*mMaxTotalU},{aTriVerts[0].v*mMaxTotalV} },
+				{ {aTriVerts[1].x + tx},{aTriVerts[1].y + ty},	{0},{1},{GetColorFromTriVertex(aTriVerts[1],theColor)},	{0},{aTriVerts[1].u*mMaxTotalU},{aTriVerts[1].v*mMaxTotalV} },
+				{ {aTriVerts[2].x + tx},{aTriVerts[2].y + ty},	{0},{1},{GetColorFromTriVertex(aTriVerts[2],theColor)},	{0},{aTriVerts[2].u*mMaxTotalU},{aTriVerts[2].v*mMaxTotalV} }
+			};
+
+			float aMinU = mMaxTotalU, aMinV = mMaxTotalV;
+			float aMaxU = 0, aMaxV = 0;
+
+			int i,j,k;
+			for (i=0; i<3; i++)
+			{
+				if(aVertex[i].tu < aMinU)
+					aMinU = aVertex[i].tu;
+
+				if(aVertex[i].tv < aMinV)
+					aMinV = aVertex[i].tv;
+
+				if(aVertex[i].tu > aMaxU)
+					aMaxU = aVertex[i].tu;
+
+				if(aVertex[i].tv > aMaxV)
+					aMaxV = aVertex[i].tv;
+			}
+
+			VertexList aMasterList;
+			aMasterList.push_back(aVertex[0]);
+			aMasterList.push_back(aVertex[1]);
+			aMasterList.push_back(aVertex[2]);
+
+
+			VertexList aList;
+
+			int aLeft = floorf(aMinU);
+			int aTop = floorf(aMinV);
+			int aRight = ceilf(aMaxU);
+			int aBottom = ceilf(aMaxV);
+			if (aLeft < 0)
+				aLeft = 0;
+			if (aTop < 0)
+				aTop = 0;
+			if (aRight > mTexVecWidth)
+				aRight = mTexVecWidth;
+			if (aBottom > mTexVecHeight)
+				aBottom = mTexVecHeight;
+
+			TextureDataPiece &aStandardPiece = mTextures[0];
+			for (i=aTop; i<aBottom; i++)
+			{
+				for (j=aLeft; j<aRight; j++)
+				{
+					TextureDataPiece &aPiece = mTextures[i*mTexVecWidth + j];
+
+
+					VertexList aList = aMasterList;
+					for(k=0; k<3; k++)
+					{
+						aList[k].tu -= j;
+						aList[k].tv -= i;
+						if (i==mTexVecHeight-1)
+							aList[k].tv *= (float)aStandardPiece.mHeight / aPiece.mHeight;
+						if (j==mTexVecWidth-1)
+							aList[k].tu *= (float)aStandardPiece.mWidth / aPiece.mWidth;
+					}
+
+					DoPolyTextureClip(aList);
+					if (aList.size() >= 3)
+					{
+						glBindTexture(GL_TEXTURE_2D, aPiece.mTexture);
+						glBegin(GL_TRIANGLE_FAN);
+						for (unsigned i=0; i<aList.size(); i++)
+						{
+							GLVertex& v = aList[i];
+
+							glColor4ubv((uint8_t*)&v.color);
+							glTexCoord2f(v.tu, v.tv);
+							glVertex2f(v.sx, v.sy);
+						}
+						glEnd();
+					}
+				}
+			}
 		}
 	}
 }
@@ -1339,20 +1620,20 @@ void GLInterface::DrawTriangle(const TriVertex &p1, const TriVertex &p2, const T
 	SetDrawMode(theDrawMode);
 
 	unsigned int aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
-	Color col1(GetColorFromTriVertex(p1, aColor));
-	Color col2(GetColorFromTriVertex(p1, aColor));
-	Color col3(GetColorFromTriVertex(p1, aColor));
+	unsigned int col1 = GetColorFromTriVertex(p1, aColor);
+	unsigned int col2 = GetColorFromTriVertex(p1, aColor);
+	unsigned int col3 = GetColorFromTriVertex(p1, aColor);
 
 	glDisable(GL_TEXTURE_2D);
 
 	glBegin(GL_TRIANGLE_STRIP);
-		glColor4ub(col1.mRed, col1.mGreen, col1.mBlue, col1.mAlpha);
+		glColor4ubv((uint8_t*)&col1);
 		glVertex2f(p1.x, p1.y);
 
-		glColor4ub(col2.mRed, col2.mGreen, col2.mBlue, col2.mAlpha);
+		glColor4ubv((uint8_t*)&col2);
 		glVertex2f(p2.x, p2.y);
 
-		glColor4ub(col3.mRed, col3.mGreen, col3.mBlue, col3.mAlpha);
+		glColor4ubv((uint8_t*)&col3);
 		glVertex2f(p3.x, p3.y);
 	glEnd();
 }
