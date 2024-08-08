@@ -17,7 +17,6 @@ static int gMinTextureWidth;
 static int gMinTextureHeight;
 static int gMaxTextureWidth;
 static int gMaxTextureHeight;
-static int gMaxTextureAspectRatio;
 static int gSupportedPixelFormats;
 static bool gTextureSizeMustBePow2;
 static const int MAX_TEXTURE_SIZE = 1024;
@@ -307,19 +306,6 @@ static void GetBestTextureDimensions(int &theWidth, int &theHeight, bool isEdge,
 
 	if (aHeight < gMinTextureHeight)
 		aHeight = gMinTextureHeight;
-
-	/*
-	if (aWidth > aHeight)
-	{
-		while (aWidth > gMaxTextureAspectRatio*aHeight)
-			aHeight <<= 1;
-	}
-	else if (aHeight > aWidth)
-	{
-		while (aHeight > gMaxTextureAspectRatio*aWidth)
-			aWidth <<= 1;
-	}
-	*/
 
 	theWidth = aWidth;
 	theHeight = aHeight;
@@ -989,7 +975,6 @@ int GLInterface::Init(bool IsWindowed)
 	gMinTextureHeight = 8;
 	gMaxTextureWidth = aMaxSize;
 	gMaxTextureHeight = aMaxSize;
-	gMaxTextureAspectRatio = 1;
 	gSupportedPixelFormats = PixelFormat_A8R8G8B8 | PixelFormat_A4R4G4B4 | PixelFormat_R5G6B5 | PixelFormat_Palette8;
 	gLinearFilter = false;
 
