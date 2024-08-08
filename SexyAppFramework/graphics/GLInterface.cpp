@@ -23,6 +23,19 @@ static const int MAX_TEXTURE_SIZE = 1024;
 static bool gLinearFilter = false;
 
 
+struct GLVertex
+{
+	float sx;
+	float sy;
+	float sz;
+	float rhw;
+	uint32_t color;
+	uint32_t specular;
+	float tu;
+	float tv;
+};
+
+
 static void CopyImageToTexture8888(MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, bool rightPad, bool bottomPad, bool create)
 {
 	uint32_t *aDest = new uint32_t[theWidth * theHeight*2];
@@ -561,19 +574,6 @@ GLuint TextureData::GetTexture(int x, int y, int &width, int &height, float &u1,
 	return aPiece.mTexture;
 }
 
-static void SetLinearFilter(bool linear)
-{
-	if (gLinearFilter != linear)
-	{
-		int aFilter = (linear) ? GL_LINEAR : GL_NEAREST;
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, aFilter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, aFilter);
-
-		gLinearFilter = linear;
-	}
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 GLuint TextureData::GetTextureF(float x, float y, float &width, float &height, float &u1, float &v1, float &u2, float &v2)
@@ -603,6 +603,21 @@ GLuint TextureData::GetTextureF(float x, float y, float &width, float &height, f
 	v2 = (float)bottom/aPiece.mHeight;
 
 	return aPiece.mTexture;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+static void SetLinearFilter(bool linear)
+{
+	if (gLinearFilter != linear)
+	{
+		int aFilter = (linear) ? GL_LINEAR : GL_NEAREST;
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, aFilter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, aFilter);
+
+		gLinearFilter = linear;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -641,24 +656,22 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 			float x = dstX - 0.5f;
 			float y = dstY - 0.5f;
 
+			GLVertex aVertex[4] = {
+				{ {x},        {y},         {0},{1},{aColor},{0},{u1},{v1} },
+				{ {x},        {y+aHeight}, {0},{1},{aColor},{0},{u1},{v2} },
+				{ {x+aWidth}, {y},         {0},{1},{aColor},{0},{u2},{v1} },
+				{ {x+aWidth}, {y+aHeight}, {0},{1},{aColor},{0},{u2},{v2} }
+			};
+
 			glBindTexture(GL_TEXTURE_2D, aTexture);
 
 			glBegin(GL_TRIANGLE_STRIP);
-				glColor4ubv((uint8_t*)&aColor);
-				glTexCoord2f(u1, v1);
-				glVertex2f(x, y);
-
-				glColor4ubv((uint8_t*)&aColor);
-				glTexCoord2f(u1, v2);
-				glVertex2f(x, y+aHeight);
-
-				glColor4ubv((uint8_t*)&aColor);
-				glTexCoord2f(u2, v1);
-				glVertex2f(x+aWidth, y);
-
-				glColor4ubv((uint8_t*)&aColor);
-				glTexCoord2f(u2, v2);
-				glVertex2f(x+aWidth, y+aHeight);
+			for (int i=0; i<4; i++)
+			{
+				glColor4ubv((uint8_t*)&aVertex[i].color);
+				glTexCoord2f(aVertex[i].tu, aVertex[i].tv);
+				glVertex2f(aVertex[i].sx, aVertex[i].sy);
+			}
 			glEnd();
 
 			srcX += aWidth;
@@ -669,18 +682,6 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 		dstY += aHeight;
 	}
 }
-
-struct GLVertex
-{
-	float sx;
-	float sy;
-	float sz;
-	float rhw;
-	uint32_t color;
-	uint32_t specular;
-	float tu;
-	float tv;
-};
 
 struct VertexList
 {
