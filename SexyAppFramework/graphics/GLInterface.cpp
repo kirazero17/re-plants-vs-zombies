@@ -621,7 +621,7 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 	srcY = srcTop;
 	dstY = theY;
 
-	//long unsigned int aColor = RGBA_MAKE(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
+	long unsigned int aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
 
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
@@ -644,19 +644,19 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 			glBindTexture(GL_TEXTURE_2D, aTexture);
 
 			glBegin(GL_TRIANGLE_STRIP);
-				glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
+				glColor4ubv((uint8_t*)&aColor);
 				glTexCoord2f(u1, v1);
 				glVertex2f(x, y);
 
-				glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
+				glColor4ubv((uint8_t*)&aColor);
 				glTexCoord2f(u1, v2);
 				glVertex2f(x, y+aHeight);
 
-				glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
+				glColor4ubv((uint8_t*)&aColor);
 				glTexCoord2f(u2, v1);
 				glVertex2f(x+aWidth, y);
 
-				glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
+				glColor4ubv((uint8_t*)&aColor);
 				glTexCoord2f(u2, v2);
 				glVertex2f(x+aWidth, y+aHeight);
 			glEnd();
@@ -1683,5 +1683,45 @@ void GLInterface::DrawTrianglesTexStrip(const TriVertex theVertices[], int theNu
 
 void GLInterface::FillPoly(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty)
 {
-	
+	if (theNumVertices<3)
+		return;
+
+	if (!PreDraw())
+		return;
+
+	SetDrawMode(theDrawMode);
+	unsigned int aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
+
+	glDisable(GL_TEXTURE_2D);
+
+	VertexList aList;
+	for (int i=0; i<theNumVertices; i++)
+	{
+		GLVertex vert = { {theVertices[i].mX + (float)tx}, {theVertices[i].mY + (float)ty}, {0}, {1}, {aColor}, {0}, {0}, {0} };
+		if (!mTransformStack.empty())
+		{
+			SexyVector2 v(vert.sx,vert.sy);
+			v = mTransformStack.back()*v;
+			vert.sx = v.x;
+			vert.sy = v.y;
+		}
+
+		aList.push_back(vert);
+	}
+
+	if (theClipRect != NULL)
+		DrawPolyClipped(theClipRect,aList);
+	else
+	{
+		glBegin(GL_TRIANGLE_FAN);
+		for (unsigned i=0; i<aList.size(); i++)
+		{
+			GLVertex& v = aList[i];
+
+			glColor4ubv((uint8_t*)&v.color);
+			glTexCoord2f(v.tu, v.tv);
+			glVertex2f(v.sx, v.sy);
+		}
+		glEnd();
+	}
 }
