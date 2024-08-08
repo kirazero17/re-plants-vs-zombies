@@ -997,7 +997,7 @@ int GLInterface::Init(bool IsWindowed)
 	glLoadIdentity();
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, mWidth, mHeight, 0, -10, 10);
+	glOrtho(0, mWidth-1, mHeight-1, 0, -10, 10);
 
 	glEnable(GL_BLEND);
 	glDisable(GL_LIGHTING);
