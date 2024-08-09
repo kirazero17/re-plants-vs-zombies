@@ -14,9 +14,9 @@ Color::Color() :
 }
 
 Color::Color(int theColor) :
-	mRed((theColor   >> 16) & 0xFF),
+	mRed((theColor   >> 0 ) & 0xFF),
 	mGreen((theColor >> 8 ) & 0xFF),
-	mBlue((theColor       ) & 0xFF),
+	mBlue((theColor  >> 16) & 0xFF),
 	mAlpha((theColor >> 24) & 0xFF)
 {
 	if(mAlpha==0)
@@ -24,9 +24,9 @@ Color::Color(int theColor) :
 }
 
 Color::Color(int theColor, int theAlpha) :
-	mRed((theColor   >> 16) & 0xFF),
+	mRed((theColor   >> 0 ) & 0xFF),
 	mGreen((theColor >> 8 ) & 0xFF),
-	mBlue((theColor       ) & 0xFF),
+	mBlue((theColor  >> 16) & 0xFF),
 	mAlpha(theAlpha)
 {
 }
@@ -129,7 +129,7 @@ int Color::operator[](int theIdx) const
 
 ulong Color::ToInt() const
 {
-	return (mAlpha << 24) | (mRed << 16) | (mGreen << 8) | (mBlue);
+	return (mAlpha << 24) | (mRed << 0) | (mGreen << 8) | (mBlue << 16);
 }
 
 SexyRGBA Color::ToRGBA() const
