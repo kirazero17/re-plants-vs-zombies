@@ -1330,6 +1330,8 @@ int GLInterface::Init(bool IsWindowed)
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
 
+	mRGBBits = 32;
+
 	mRedBits = 8;
 	mGreenBits = 8;
 	mBlueBits = 8;
