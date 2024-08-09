@@ -896,10 +896,9 @@ bool TodParticleEmitter::GetRenderParams(TodParticle* theParticle, ParticleRende
 	float aParticleBrightness = aEmitter->ParticleTrackEvaluate(aDef->mParticleBrightness, theParticle, ParticleTracks::TRACK_PARTICLE_BRIGHTNESS);
 	float aBrightness = aParticleBrightness * aSystemBrightness;
 	// 实际颜色 = 粒子颜色 * 系统颜色 * 覆写颜色 * 亮度
-	// headshot2017: swapped red and blue
-	theParams->mBlue = aParticleRed * aSystemRed * aEmitter->mColorOverride.mRed * aBrightness;
+	theParams->mRed = aParticleRed * aSystemRed * aEmitter->mColorOverride.mRed * aBrightness;
 	theParams->mGreen = aParticleGreen * aSystemGreen * aEmitter->mColorOverride.mGreen * aBrightness;
-	theParams->mRed = aParticleBlue * aSystemBlue * aEmitter->mColorOverride.mBlue * aBrightness;
+	theParams->mBlue = aParticleBlue * aSystemBlue * aEmitter->mColorOverride.mBlue * aBrightness;
 	theParams->mAlpha = aParticleAlpha * aSystemAlpha * aEmitter->mColorOverride.mAlpha * aBrightness;
 	theParams->mPosX = theParticle->mPosition.x;
 	theParams->mPosY = theParticle->mPosition.y;
