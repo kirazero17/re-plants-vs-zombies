@@ -95,9 +95,6 @@ static void CopyImageToTexture8888(MemoryImage *theImage, int offx, int offy, in
 
 static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
 {
-	printf("4444 %d %d %d %d\n", offx, offy, theWidth, theHeight);
-	fflush(stdout);
-
 	uint16_t *aDest = new uint16_t[theDestPitch * theDestHeight];
 
 	if (theImage->mColorTable == NULL)
@@ -188,8 +185,26 @@ static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int
 	}
 	else
 	{
-		printf("565 PALETTE %d %d %d %d\n", offx, offy, theDestPitch, theDestHeight);
-		fflush(stdout);
+		uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
+		uint16_t *dstRow = aDest;
+		long unsigned int *palette = theImage->mColorTable;
+
+		for(int y=0; y<theHeight; y++)
+		{
+			uint8_t *src = srcRow;
+			uint16_t *dst = dstRow;
+			for(int x=0; x<theWidth; x++)
+			{
+				long unsigned int aPixel = palette[*src++];
+				*dst++ = ((aPixel>>8)&0xF800) | ((aPixel>>5)&0x07E0) | ((aPixel>>3)&0x001F);
+			}
+
+			if (rightPad) 
+				*dst = *(dst-1);
+
+			srcRow += theImage->GetWidth();
+			dstRow += theDestPitch;
+		}
 	}
 
 	if (bottomPad)
@@ -206,14 +221,46 @@ static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int
 	delete[] aDest;
 }
 
-static void CopyImageToTexturePalette8(int theTexWidth, MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool create)
+static void CopyImageToTexturePalette8(MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
 {
-	printf("PALETTE %d %d %d %d - %d\n", offx, offy, theWidth, theHeight, theTexWidth);
+	printf("PALETTE %d %d - %d %d - %d %d\n", offx, offy, theWidth, theHeight, theDestPitch, theDestHeight);
 	fflush(stdout);
 
-	uint8_t *rgbaData = new uint8_t[theWidth * theHeight * 4];
+	uint32_t *aDest = new uint32_t[theDestPitch * theDestHeight];
 
-	delete[] rgbaData;
+	uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
+	uint32_t *dstRow = aDest;
+	long unsigned int *palette = theImage->mColorTable;
+
+	for(int y=0; y<theHeight; y++)
+	{
+		uint8_t *src = srcRow;
+		uint32_t *dst = dstRow;
+		for(int x=0; x<theWidth; x++)
+		{
+			long unsigned int aPixel = palette[*src++];
+			*dst++ = (aPixel&0xFF00FF00) | ((aPixel>>16)&0xFF) | ((aPixel<<16)&0xFF0000);
+		}
+
+		if (rightPad) 
+			*dst = *(dst-1);
+
+		srcRow += theImage->GetWidth();
+		dstRow += theDestPitch;
+	}
+
+	if (bottomPad)
+	{
+		uint32_t *dstrow = aDest + (theDestPitch*theHeight);
+		memcpy(dstrow, dstrow-(theDestPitch*4), (theDestPitch*4));
+	}
+
+	if (create)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, theDestPitch, theDestHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, aDest);
+	else
+		glTexSubImage2D(GL_TEXTURE_2D, 0, offx, offy, theDestPitch, theDestHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, aDest);
+
+	delete[] aDest;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -239,7 +286,7 @@ static void CopyImageToTexture(GLuint& theTexture, MemoryImage *theImage, int of
 			case PixelFormat_A8R8G8B8:	CopyImageToTexture8888(theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
 			case PixelFormat_A4R4G4B4:	CopyImageToTexture4444(theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
 			case PixelFormat_R5G6B5:	CopyImageToTexture565(theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
-			case PixelFormat_Palette8:	CopyImageToTexturePalette8(texWidth, theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, create); break;
+			case PixelFormat_Palette8:	CopyImageToTexturePalette8(theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
 			case PixelFormat_Unknown: break;
 		}
 	}
