@@ -603,7 +603,7 @@ void TextureData::CheckCreateTextures(MemoryImage *theImage)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-GLuint TextureData::GetTexture(int x, int y, int &width, int &height, float &u1, float &v1, float &u2, float &v2)
+GLuint& TextureData::GetTexture(int x, int y, int &width, int &height, float &u1, float &v1, float &u2, float &v2)
 {
 	int tx = x/mTexPieceWidth;
 	int ty = y/mTexPieceHeight;
@@ -634,7 +634,7 @@ GLuint TextureData::GetTexture(int x, int y, int &width, int &height, float &u1,
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-GLuint TextureData::GetTextureF(float x, float y, float &width, float &height, float &u1, float &v1, float &u2, float &v2)
+GLuint& TextureData::GetTextureF(float x, float y, float &width, float &height, float &u1, float &v1, float &u2, float &v2)
 {
 	int tx = x/mTexPieceWidth;
 	int ty = y/mTexPieceHeight;
@@ -709,7 +709,7 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 		{
 			aWidth = srcRight-srcX;
 			aHeight = srcBottom-srcY;
-			GLuint aTexture = GetTexture(srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
+			GLuint& aTexture = GetTexture(srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
 
 			float x = dstX - 0.5f;
 			float y = dstY - 0.5f;
@@ -975,7 +975,7 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 		{
 			aWidth = srcRight-srcX;
 			aHeight = srcBottom-srcY;
-			GLuint aTexture = GetTexture(srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
+			GLuint& aTexture = GetTexture(srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
 
 			float x = dstX; // - 0.5f;
 			float y = dstY; // - 0.5f;
