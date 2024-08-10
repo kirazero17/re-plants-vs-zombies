@@ -18,6 +18,8 @@ public:
 	GLInterface*			mGLInterface;
 
 public:
+	virtual void			FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const Color& theColor, int theDrawMode, const BYTE* theCoverage, int theCoverX, int theCoverY, int theCoverWidth, int theCoverHeight);
+
 	static bool				Check3D(GLImage *theImage);
 	static bool				Check3D(Image *theImage);
 
@@ -25,6 +27,8 @@ public:
 	GLImage();
 	GLImage(GLInterface* theGLInterface);
 	virtual ~GLImage();
+
+	virtual void			Create(int theWidth, int theHeight);
 
 	virtual bool			PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty);
 	virtual void			FillRect(const Rect& theRect, const Color& theColor, int theDrawMode);
@@ -39,6 +43,8 @@ public:
 
 	virtual void			BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode);
 	virtual void			StretchBltMirror(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch);
+
+	virtual void			PurgeBits();
 };
 
 }

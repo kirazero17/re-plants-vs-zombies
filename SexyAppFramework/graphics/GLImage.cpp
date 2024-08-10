@@ -24,6 +24,42 @@ GLImage::~GLImage()
 	mGLInterface->RemoveGLImage(this);
 }
 
+void GLImage::Create(int theWidth, int theHeight)
+{
+	delete [] mBits;
+
+	mBits = NULL;
+
+	BitsChanged();	
+}
+
+void GLImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const Color& theColor, int theDrawMode, const BYTE* theCoverage, int theCoverX, int theCoverY, int theCoverWidth, int theCoverHeight)
+{
+	if (theSpanCount == 0) return;
+
+	int l = theSpans[0].mX, t = theSpans[0].mY;
+	int r = l + theSpans[0].mWidth, b = t;
+	for (int i = 1; i < theSpanCount; ++i)  //此循环结束后，Rect(l, t, r - l + 1, b - t + 1) 即为包含所有 Span 的最小矩形区域
+	{
+		l = std::min(theSpans[i].mX, l);
+		r = std::max(theSpans[i].mX + theSpans[i].mWidth - 1, r);
+		t = std::min(theSpans[i].mY, t);
+		b = std::max(theSpans[i].mY, b);
+	}
+	for (int i = 0; i < theSpanCount; ++i)  //此循环将所有 Span 的绝对坐标更改为在上述矩形区域内的相对坐标
+	{
+		theSpans[i].mX -= l;
+		theSpans[i].mY -= t;
+	}
+
+	MemoryImage aTempImage;
+	aTempImage.Create(r-l+1, b-t+1);  //创建一个与最小矩形区域相同大小的 MemoryImage
+	//theCoverX - l 和 theCoverY - t 分别将绝对坐标转化为 MemoryImage 上的相对坐标
+	aTempImage.FillScanLinesWithCoverage(theSpans, theSpanCount, theColor, theDrawMode, theCoverage, theCoverX - l, theCoverY - t, theCoverWidth, theCoverHeight);
+	Blt(&aTempImage, l, t, Rect(0, 0, r-l+1, b-t+1), Color::White, theDrawMode);
+	return;
+}
+
 bool GLImage::Check3D(GLImage *theImage)
 {
 	return true;
@@ -33,6 +69,16 @@ bool GLImage::Check3D(Image *theImage)
 {
 	GLImage *anImage = dynamic_cast<GLImage*>(theImage);
 	return anImage != 0;
+}
+
+void GLImage::PurgeBits()
+{
+	mPurgeBits = true;
+
+	CommitBits();
+	GetBits();
+
+	MemoryImage::PurgeBits();
 }
 
 bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty)
