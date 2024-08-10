@@ -3759,7 +3759,6 @@ void SexyAppBase::RehupFocus()
 {
 	bool wantHasFocus = mActive && !mMinimized;
 
-	printf("%d %d %d\n", wantHasFocus, mActive, mMinimized);
 	if (wantHasFocus != mHasFocus)
 	{					
 		mHasFocus = wantHasFocus;
