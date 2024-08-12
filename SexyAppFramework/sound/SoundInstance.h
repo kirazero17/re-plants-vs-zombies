@@ -1,8 +1,6 @@
 #ifndef __SOUNDINSTANCE_H__
 #define __SOUNDINSTANCE_H__
 
-#define NOMINMAX 1
-#include <windows.h>
 #include "Common.h"
 
 namespace Sexy
@@ -14,13 +12,13 @@ public:
 	SoundInstance() {}
 	virtual ~SoundInstance() {}
 	virtual void			Release() = 0;
-		
+
 	virtual void			SetBaseVolume(double theBaseVolume) = 0; 
 	virtual void			SetBasePan(int theBasePan) = 0;
 
 	virtual void			AdjustPitch(double theNumSteps) = 0;
 
-	virtual void			SetVolume(double theVolume) = 0; 
+	virtual void			SetVolume(double theVolume) = 0;
 	virtual void			SetPan(int thePosition) = 0; //-hundredth db to +hundredth db = left to right
 
 	virtual bool			Play(bool looping, bool autoRelease) = 0;	

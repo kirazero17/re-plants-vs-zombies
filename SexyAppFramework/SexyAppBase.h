@@ -54,7 +54,7 @@ typedef std::list<WidgetSafeDeleteInfo> WidgetSafeDeleteList;
 typedef std::set<MemoryImage*> MemoryImageSet;
 typedef std::map<int, Dialog*> DialogMap;
 typedef std::list<Dialog*> DialogList;
-typedef std::list<MSG> WindowsMessageList;
+//typedef std::list<MSG> WindowsMessageList;
 typedef std::vector<std::string> StringVector;
 //typedef std::basic_string<TCHAR> tstring; // string of TCHARs
 
@@ -182,11 +182,11 @@ public:
 	bool					mInitialized;	
 	bool					mProcessInTimer;
 	DWORD					mTimeLoaded;
-	HWND					mHWnd;
-	HWND					mInvisHWnd;
+	//HWND					mHWnd;
+	//HWND					mInvisHWnd;
 	bool					mIsScreenSaver;
 	bool					mAllowMonitorPowersave;
-	WindowsMessageList		mDeferredMessages;
+	//WindowsMessageList		mDeferredMessages;
 	bool					mNoDefer;	
 	bool					mFullScreenPageFlip;	
 	bool					mTabletPC;
@@ -197,7 +197,7 @@ public:
 	std::string				mRegisterLink;
 	std::string				mProductVersion;	
 	Image*					mCursorImages[NUM_CURSORS];
-	HCURSOR					mOverrideCursor;
+	//HCURSOR					mOverrideCursor;
 	bool					mIsOpeningURL;
 	bool					mShutdownOnURLOpen;
 	std::string				mOpeningURL;
@@ -242,8 +242,8 @@ public:
 
 	int						mCursorNum;
 	SoundManager*			mSoundManager;
-	HCURSOR					mHandCursor;
-	HCURSOR					mDraggingCursor;
+	//HCURSOR					mHandCursor;
+	//HCURSOR					mDraggingCursor;
 	WidgetSafeDeleteList	mSafeDeleteList;
 	bool					mMouseIn;	
 	bool					mRunning;

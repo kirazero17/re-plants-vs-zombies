@@ -24,17 +24,17 @@ public:
     int                 mY;                         //+0xC
     FacingDirection     mFacing;                    //+0x10
 
-    __time64_t          mLastWateredTime;           //+0x18
+    time_t              mLastWateredTime;           //+0x18
     DrawVariation       mDrawVariation;             //+0x20
     PottedPlantAge      mPlantAge;                  //+0x24
     int                 mTimesFed;                  //+0x28
     int                 mFeedingsPerGrow;           //+0x2C
     PottedPlantNeed     mPlantNeed;                 //+0x30
 
-    __time64_t          mLastNeedFulfilledTime;     //+0x38
-    __time64_t          mLastFertilizedTime;        //+0x40
-    __time64_t          mLastChocolateTime;         //+0x48
-    __time64_t          mFutureAttribute[1];        //+0x50
+    time_t              mLastNeedFulfilledTime;     //+0x38
+    time_t              mLastFertilizedTime;        //+0x40
+    time_t              mLastChocolateTime;         //+0x48
+    time_t              mFutureAttribute[1];        //+0x50
 
 public:
     void                InitializePottedPlant(SeedType theSeedType);

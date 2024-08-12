@@ -1,8 +1,6 @@
 #ifndef __SOUNDMANAGER_H__
 #define __SOUNDMANAGER_H__
 
-#define NOMINMAX 1
-#include <windows.h>
 #include "Common.h"
 
 namespace Sexy

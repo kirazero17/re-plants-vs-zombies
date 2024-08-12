@@ -1,9 +1,16 @@
 #ifndef __BASSLOADER_H__
 #define __BASSLOADER_H__
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX 1
 #include <windows.h>
+typedef HMODULE LibModule;
+#else
+#include <dlfcn.h>
+typedef void* LibModule;
+#endif
+
 #include <stdio.h>
 
 #include "bass.h"

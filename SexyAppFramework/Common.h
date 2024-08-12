@@ -20,10 +20,47 @@
 #include <algorithm>
 #include <cstdlib>
 
+#ifdef _WIN32
 #define NOMINMAX 1
 #include <windows.h>
-#include <shellapi.h> 
+#include <shellapi.h>
 #include <mmsystem.h>
+#else
+
+#include <wctype.h>
+#include <string.h>
+#define _stricmp strcasecmp
+typedef unsigned char BYTE;
+typedef unsigned short WORD;
+typedef unsigned int UINT;
+typedef int INT;
+typedef long LONG;
+typedef unsigned long ULONG;
+typedef LONG WINBOOL;
+typedef ULONG DWORD;
+typedef void *HANDLE;
+typedef WORD *LPWORD;
+typedef DWORD *LPDWORD;
+typedef char CHAR;
+typedef CHAR *LPSTR;
+typedef const CHAR *LPCSTR;
+typedef wchar_t WCHAR;
+typedef WCHAR TCHAR;
+typedef WCHAR *LPWSTR;
+typedef TCHAR *LPTSTR;
+typedef const WCHAR *LPCWSTR;
+typedef const TCHAR *LPCTSTR;
+typedef HANDLE *LPHANDLE;
+
+typedef struct tagRECT {
+  LONG left;
+  LONG top;
+  LONG right;
+  LONG bottom;
+} RECT, *PRECT, *NPRECT, *LPRECT;
+
+#endif
+
 #include "misc/ModVal.h"
 
 // fallback if NOMINMAX fails (somehow?)
@@ -68,7 +105,7 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
-typedef __int64 int64;
+typedef int64_t int64;
 
 typedef std::map<std::string, std::string>		DefinesMap;
 typedef std::map<std::wstring, std::wstring>	WStringWStringMap;
@@ -81,7 +118,7 @@ namespace Sexy
 const ulong SEXY_RAND_MAX = 0x7FFFFFFF;
 
 extern bool			gDebug;
-extern HINSTANCE	gHInstance;
+//extern HINSTANCE	gHInstance;
 
 int					Rand();
 int					Rand(int range);
