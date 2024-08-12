@@ -1,6 +1,8 @@
 #include "DialogButton.h"
-#include "graphics/SysFont.h"
+//#include "graphics/SysFont.h"
+#include "graphics/ImageFont.h"
 #include "WidgetManager.h"
+#include "../../Resources.h" // bad
 
 using namespace Sexy;
 
@@ -36,7 +38,8 @@ void DialogButton::Draw(Graphics* g)
 	}
 
 	if ((mFont == NULL) && (mLabel.length() > 0))
-		mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 12, true);
+		mFont = FONT_PICO129->Duplicate();
+		//mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 12, true);
 
 	bool doTranslate = IsButtonDown();
 

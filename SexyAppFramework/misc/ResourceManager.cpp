@@ -5,7 +5,7 @@
 #include "graphics/GLImage.h"
 #include "graphics/GLInterface.h"
 #include "graphics/ImageFont.h"
-#include "graphics/SysFont.h"
+//#include "graphics/SysFont.h"
 #include "imagelib/ImageLib.h"
 
 //#define SEXY_PERF_ENABLED
@@ -858,6 +858,7 @@ bool ResourceManager::DoLoadFont(FontRes* theRes)
 
 	if (theRes->mSysFont)
 	{
+		/*
 		bool bold = theRes->mBold, simulateBold = false;
 		if (Sexy::CheckFor98Mill())
 		{
@@ -868,6 +869,7 @@ bool ResourceManager::DoLoadFont(FontRes* theRes)
 		SysFont* aSysFont = (SysFont*)aFont;
 		aSysFont->mDrawShadow = theRes->mShadow;
 		aSysFont->mSimulateBold = simulateBold;
+		*/
 	}
 	else if (theRes->mImagePath.empty())	
 	{

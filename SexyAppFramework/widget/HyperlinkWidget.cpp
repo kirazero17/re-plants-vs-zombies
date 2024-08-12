@@ -1,8 +1,9 @@
 #include "HyperlinkWidget.h"
 #include "graphics/Graphics.h"
 #include "graphics/ImageFont.h"
-#include "graphics/SysFont.h"
+//#include "graphics/SysFont.h"
 #include "WidgetManager.h"
+#include "../../Resources.h" // bad
 
 using namespace Sexy;
 
@@ -19,7 +20,8 @@ HyperlinkWidget::HyperlinkWidget(int theId, ButtonListener* theButtonListener) :
 void HyperlinkWidget::Draw(Graphics* g)
 {
 	if (mFont == NULL)
-		mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 10); //baz changed
+		mFont = FONT_PICO129->Duplicate();
+		//mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 10); //baz changed
 
 	int aFontX = (mWidth - mFont->StringWidth(mLabel))/2;
 	int aFontY = (mHeight + mFont->GetAscent())/2 - 1;

@@ -118,7 +118,7 @@ public:
 	GameButton*						mStoreButton;											//+0x14C
 	bool							mIgnoreMouseUp;											//+0x150
 	ToolTipWidget*					mToolTip;												//+0x154
-	_Font*							mDebugFont;												//+0x158
+	//_Font*							mDebugFont;											//+0x158
 	CutScene*						mCutScene;												//+0x15C
 	Challenge*						mChallenge;												//+0x160
 	bool							mPaused;												//+0x164

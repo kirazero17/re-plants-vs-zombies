@@ -18,10 +18,11 @@ BassMusicInfo::BassMusicInfo()
 	mHStream = 0;
 }
 
-BassMusicInterface::BassMusicInterface(HWND theHWnd)
+BassMusicInterface::BassMusicInterface()
 {
 	LoadBassDLL();
 
+	/*
 	MIXERCONTROLDETAILS mcd;
 	MIXERCONTROLDETAILS_UNSIGNED mxcd_u;
 	MIXERLINECONTROLS mxlc;
@@ -51,6 +52,7 @@ BassMusicInterface::BassMusicInterface(HWND theHWnd)
 	mcd.paDetails = &mxcd_u;
 	
 	mixerGetControlDetails(phmx, &mcd, 0L);
+	*/
 
 	//return mxcd_u.dwValue;	
 
@@ -59,11 +61,11 @@ BassMusicInterface::BassMusicInterface(HWND theHWnd)
 	success = gBass->BASS_Init(1, 44100, 0, 0, NULL);
 	gBass->BASS_SetConfig(BASS_CONFIG_BUFFER, 2000);	
 
-	mixerSetControlDetails(phmx, &mcd, 0L);
+	//mixerSetControlDetails(phmx, &mcd, 0L);
 
 	gBass->BASS_Start();
 
-	mixerClose((HMIXER) phmx);
+	//mixerClose((HMIXER) phmx);
 
 	mMaxMusicVolume = 40;
 

@@ -190,7 +190,7 @@ bool SDLSoundInstance::Play(bool looping, bool autoRelease)
 	mChannel = Mix_PlayChannel(-1, mMixChunk, (looping) ? -1 : 0);
 	if (mChannel != -1)
 	{
-		CreateSoundPitchHandler(mMixChunk, &mPitch, looping, 1);
+		CreateSoundPitchHandler(mMixChunk, &mPitch, looping, 0);
 		Mix_RegisterEffect(mChannel, PitchHandlerFuncCallback, 0, &mPitchHandler);
 		return true;
 	}

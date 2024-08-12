@@ -1,8 +1,10 @@
 #include "EditWidget.h"
-#include "graphics/SysFont.h"
+//#include "graphics/SysFont.h"
+#include "graphics/ImageFont.h"
 #include "WidgetManager.h"
 #include "SexyAppBase.h"
 #include "EditListener.h"
+#include "../../Resources.h" // bad
 
 using namespace Sexy;
 
@@ -115,7 +117,8 @@ void EditWidget::SetFont(_Font* theFont, _Font* theWidthCheckFont)
 void EditWidget::Draw(Graphics* g) // Already translated
 {	
 	if (mFont == NULL)
-		mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 10, false);
+		mFont = FONT_PICO129->Duplicate();
+		//mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 10, false);
 
 	SexyString &aString = GetDisplayString();
 
@@ -182,6 +185,7 @@ void EditWidget::UpdateCaretPos()
 void EditWidget::GotFocus()
 {
 	Widget::GotFocus();
+	/*
 	if (mWidgetManager && mWidgetManager->mApp->mTabletPC)
 	{
 		SexyAppBase *anApp = mWidgetManager->mApp;
@@ -190,6 +194,7 @@ void EditWidget::GotFocus()
 		UpdateCaretPos();
 		ShowCaret(anApp->mHWnd);
 	}
+	*/
 
 	SDL_StartTextInput();
 	mShowingCursor = true;
@@ -201,11 +206,13 @@ void EditWidget::LostFocus()
 {
 	Widget::LostFocus();
 
+	/*
 	if (mWidgetManager && mWidgetManager->mApp->mTabletPC)
 	{
 		HideCaret(mWidgetManager->mApp->mHWnd);
 		DestroyCaret();
 	}
+	*/
 
 	SDL_StopTextInput();
 	mShowingCursor = false;	

@@ -730,6 +730,7 @@ static LRESULT CALLBACK SEHProgressWindowProc(HWND hWnd, UINT uMsg, WPARAM wPara
 
 static void CreateProgressWindow()
 {
+	/*
 	WNDCLASSA wc;
 	wc.style = 0;
 	wc.cbClsExtra = 0;
@@ -797,6 +798,7 @@ static void CreateProgressWindow()
 		SendMessage(SEHCatcher::mNoButtonWindow, WM_SETFONT, (WPARAM) SEHCatcher::mDialogFont, 0);
 
 	ShowWindow(aHWnd, SW_NORMAL);
+	*/	
 }
 
 LRESULT CALLBACK SEHCatcher::SEHWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -973,6 +975,7 @@ void SEHCatcher::SubmitReportThread(void *theArg)
 
 void SEHCatcher::ShowSubmitInfoDialog()
 {
+	/*
 	WNDCLASSA wc;
 	wc.style = 0;
 	wc.cbClsExtra = 0;
@@ -1084,10 +1087,12 @@ void SEHCatcher::ShowSubmitInfoDialog()
 		SendMessage(mNoButtonWindow, WM_SETFONT, (WPARAM) aBoldArialFont, 0);
 
 	ShowWindow(aHWnd, SW_NORMAL);
+	*/
 }
 
 void SEHCatcher::ShowErrorDialog(const std::string& theErrorTitle, const std::string& theErrorText)
 {
+	/*
 	OSVERSIONINFO aVersionInfo;
 	aVersionInfo.dwOSVersionInfoSize = sizeof(aVersionInfo);
 	GetVersionEx(&aVersionInfo);
@@ -1262,6 +1267,7 @@ void SEHCatcher::ShowErrorDialog(const std::string& theErrorTitle, const std::st
 	DeleteObject(mBoldFont);
 	DeleteObject(aBoldArialFont);
 	DeleteObject(aCourierNewFont);
+	*/
 }
 
 std::string SEHCatcher::GetSysInfo()

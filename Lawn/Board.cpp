@@ -20,7 +20,7 @@
 #include "widget/Dialog.h"
 #include "misc/MTRand.h"
 #include "../Sexy.TodLib/TodParticle.h"
-#include "graphics/SysFont.h"
+//#include "graphics/SysFont.h"
 #include "../Sexy.TodLib/EffectSystem.h"
 #include "../Sexy.TodLib/TodStringFile.h"
 #include "graphics/ImageFont.h"
@@ -155,7 +155,7 @@ Board::Board(LawnApp* theApp)
 	mSukhbirMode = mApp->mSukhbirMode;
 	mShowShovel = false;
 	mToolTip = new ToolTipWidget();
-	mDebugFont = new SysFont("Arial Unicode MS", 10, true, false, false);
+	//mDebugFont = new SysFont("Arial Unicode MS", 10, true, false, false);
 	mAdvice = new MessageWidget(mApp);
 	mBackground = BackgroundType::BACKGROUND_1_DAY;
 	mMainCounter = 0;
@@ -233,10 +233,12 @@ Board::~Board()
 	{
 		delete mToolTip;
 	}
+	/*
 	if (mDebugFont)
 	{
 		delete mDebugFont;
 	}
+	*/
 	delete mCutScene;
 	delete mChallenge;
 }
@@ -7314,7 +7316,7 @@ void Board::DrawDebugText(Graphics* g)
 		break;
 	}
 
-	g->SetFont(mDebugFont);
+	g->SetFont(FONT_PICO129);
 	g->SetColor(Color::Black);
 	g->DrawStringWordWrapped(aText, 10, 89);
 	g->DrawStringWordWrapped(aText, 11, 91);

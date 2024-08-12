@@ -2358,7 +2358,7 @@ bool LawnApp::UpdateApp()
 //0x453A70
 void LawnApp::CloseRequestAsync()
 {
-	mDeferredMessages.clear();
+	//mDeferredMessages.clear();
 	mExitToTop = true;
 	mCloseRequest = true;
 }

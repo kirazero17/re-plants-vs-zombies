@@ -3,7 +3,7 @@
 #include "../../Resources.h"
 #include "../../Sexy.TodLib/TodCommon.h"
 #include "graphics/Font.h"
-#include "graphics/SysFont.h"
+//#include "graphics/SysFont.h"
 #include "graphics/Graphics.h"
 #include "../../Sexy.TodLib/TodStringFile.h"
 #include "widget/WidgetManager.h"
@@ -126,7 +126,7 @@ void GameButton::Draw(Graphics* g)
 	g->mTransX += mX;
 	g->mTransY += mY;
 	if (!mFont && mLabel.size() > 0)
-		mFont = new SysFont(mApp, "Arial Unicode MS", 10);
+		mFont = FONT_PICO129->Duplicate();
 	
 	int aFontX = mTextOffsetX;
 	int aFontY = mTextOffsetY;

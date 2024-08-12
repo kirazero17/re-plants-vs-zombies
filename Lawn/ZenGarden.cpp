@@ -744,30 +744,28 @@ void ZenGarden::RemoveHappyEffect(Plant* thePlant)
 //0x51E890
 bool ZenGarden::WasPlantNeedFulfilledToday(PottedPlant* thePottedPlant)
 {
-    __time64_t aNow = _time64(nullptr);
+    time_t aNow = time(0);
     if (aNow - thePottedPlant->mLastNeedFulfilledTime < 3600)
     {
         return true;
     }
 
-    tm aNowTM, aLastNeedFulfilledTM;
-    _localtime64_s(&aNowTM, &aNow);
-    _localtime64_s(&aLastNeedFulfilledTM, &thePottedPlant->mLastNeedFulfilledTime);
+    tm aNowTM = *localtime(&aNow);
+    tm aLastNeedFulfilledTM = *localtime(&thePottedPlant->mLastNeedFulfilledTime);
     return aNowTM.tm_year <= aLastNeedFulfilledTM.tm_year && aNowTM.tm_yday <= aLastNeedFulfilledTM.tm_yday;
 }
 
 //0x51E910
 bool ZenGarden::PlantShouldRefreshNeed(PottedPlant* thePottedPlant)
 {
-    __time64_t aNow = _time64(nullptr);
+    time_t aNow = time(0);
     if (aNow - thePottedPlant->mLastWateredTime < 3600)
     {
         return false;
     }
     
-    tm aNowTM, aLastWateredTM;
-    _localtime64_s(&aNowTM, &aNow);
-    _localtime64_s(&aLastWateredTM, &thePottedPlant->mLastWateredTime);
+    tm aNowTM = *localtime(&aNow);
+    tm aLastWateredTM = *localtime(&thePottedPlant->mLastWateredTime);
     return aNowTM.tm_year > aLastWateredTM.tm_year || aNowTM.tm_yday > aLastWateredTM.tm_yday;
 }
 

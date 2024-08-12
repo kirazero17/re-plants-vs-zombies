@@ -1,8 +1,10 @@
 #include "ButtonWidget.h"
 #include "graphics/Image.h"
-#include "graphics/SysFont.h"
+//#include "graphics/SysFont.h"
+#include "graphics/ImageFont.h"
 #include "WidgetManager.h"
 #include "ButtonListener.h"
+#include "../../Resources.h" // bad
 
 using namespace Sexy;
 
@@ -71,7 +73,8 @@ void ButtonWidget::Draw(Graphics* g)
 		return;
 
 	if ((mFont == NULL) && (mLabel.length() > 0))
-		mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 10);
+		mFont = FONT_PICO129->Duplicate();
+		//mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 10);
 
 	bool isDown = mIsDown && mIsOver && !mDisabled;
 	isDown ^= mInverted;

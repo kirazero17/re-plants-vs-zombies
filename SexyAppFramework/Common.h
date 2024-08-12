@@ -19,6 +19,7 @@
 #include <list>
 #include <algorithm>
 #include <cstdlib>
+#include <cstdint>
 
 #ifdef _WIN32
 #define NOMINMAX 1
