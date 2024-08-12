@@ -253,6 +253,12 @@ bool FontData::GetColorFromDataElement(DataElement* theElement, Color& theColor)
 	return true;
 }
 
+static char32_t UTF8CharToUTF32Char(const std::string &theString)
+{
+	char32_t ret = 0;
+	memcpy(&ret, theString.data(), theString.length());
+	return ret;
+}
 
 bool FontData::HandleCommand(const ListDataElement& theParams)
 {
@@ -758,6 +764,9 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 				{
 					for (ulong i = 0; i < aCharsVector.size(); i++)
 					{
+						char32_t first_char = UTF8CharToUTF32Char(aCharsVector[i]);
+						aLayer->GetCharData(first_char)->mWidth = aCharWidthsVector[i];
+						/*
 						std::wstring aWString = UTF8StringToWString(aCharsVector[i]);
 						if (aWString.length() == 1)
 						{
@@ -766,6 +775,7 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 						}
 						else
 							invalidParamFormat = true;
+						*/
 					}
 				}
 				else
@@ -824,10 +834,10 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 						for (ulong i = 0; i < aCharsVector.size(); i++)
 						{
 							IntVector aRectElement;
-							std::wstring aWString = UTF8StringToWString(aCharsVector[i]);
+							//std::wstring aWString = UTF8StringToWString(aCharsVector[i]);
+							char32_t first_char = UTF8CharToUTF32Char(aCharsVector[i]);
 
-							if ((aWString.length() == 1) &&
-								(DataToIntVector(aRectList.mElementVector[i], &aRectElement)) &&
+							if ((DataToIntVector(aRectList.mElementVector[i], &aRectElement)) &&
 								(aRectElement.size() == 4))
 
 							{
@@ -841,7 +851,8 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 								}
 
 								//aLayer->mCharData[(uchar) aCharsVector[i][0]].mImageRect = aRect;;									
-								aLayer->GetCharData(aWString[0])->mImageRect = aRect;
+								//aLayer->GetCharData(aWString[0])->mImageRect = aRect;
+								aLayer->GetCharData(first_char)->mImageRect = aRect;
 							}
 							else
 								invalidParamFormat = true;
@@ -892,14 +903,15 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 					for (ulong i = 0; i < aCharsVector.size(); i++)
 					{
 						IntVector aRectElement = IntVector();
-						std::wstring aWString = UTF8StringToWString(aCharsVector[i]);
+						//std::wstring aWString = UTF8StringToWString(aCharsVector[i]);
+						char32_t first_char = UTF8CharToUTF32Char(aCharsVector[i]);
 
-						if ((aWString.length() == 1) &&
-							(DataToIntVector(aRectList.mElementVector[i], &aRectElement)) &&
+						if ((DataToIntVector(aRectList.mElementVector[i], &aRectElement)) &&
 							(aRectElement.size() == 2))
 						{
 							//aLayer->mCharData[(uchar) aCharsVector[i][0]].mOffset = Point(aRectElement[0], aRectElement[1]);
-							aLayer->GetCharData(aWString[0])->mOffset = Point(aRectElement[0], aRectElement[1]);
+							//aLayer->GetCharData(aWString[0])->mOffset = Point(aRectElement[0], aRectElement[1]);
+							aLayer->GetCharData(first_char)->mOffset = Point(aRectElement[0], aRectElement[1]);
 						}
 						else {
 							invalidParamFormat = true;
