@@ -1317,7 +1317,7 @@ void Reanimation::ParseAttacherTrack(const ReanimatorTransform& theTransform, At
 			break;
 		
 		std::string aCode(aTags + 1, aTagEnds - aTags - 1);  // 取中括号内的文本
-		if (sscanf_s(aCode.c_str(), "%f", &theAttacherInfo.mAnimRate) != 1)  // 尝试将文本作为浮点数扫描，如果扫描成功则将结果作为动画速率
+		if (sscanf(aCode.c_str(), "%f", &theAttacherInfo.mAnimRate) != 1)  // 尝试将文本作为浮点数扫描，如果扫描成功则将结果作为动画速率
 		{
 			if (aCode.compare("hold") == 0)
 				theAttacherInfo.mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
