@@ -38,6 +38,7 @@ void Sexy::SRand(ulong theSeed)
 	gMTRand.SRand(theSeed);
 }
 
+/*
 bool Sexy::CheckFor98Mill()
 {
 	static bool needOsCheck = true;
@@ -89,6 +90,7 @@ bool Sexy::CheckForVista()
 
 	return isVista;
 }
+*/
 
 std::string Sexy::GetAppDataFolder()
 {
@@ -97,17 +99,14 @@ std::string Sexy::GetAppDataFolder()
 
 void Sexy::SetAppDataFolder(const std::string& thePath)
 {
-	if (CheckForVista())
+	std::string aPath = thePath;
+	if (!aPath.empty())
 	{
-		std::string aPath = thePath;
-		if (!aPath.empty())
-		{
-			if (aPath[aPath.length()-1] != '\\' && aPath[aPath.length()-1] != '/')
-				aPath += '/';
-		}
-
-		Sexy::gAppDataFolder = aPath;
+		if (aPath[aPath.length()-1] != '\\' && aPath[aPath.length()-1] != '/')
+			aPath += '/';
 	}
+
+	Sexy::gAppDataFolder = aPath;
 }
 
 
