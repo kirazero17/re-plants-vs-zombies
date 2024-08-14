@@ -3,13 +3,10 @@
 //#define SEXY_MEMTRACE
 
 #include <string>
-#include <shlobj.h>
-#include <process.h>
-#include <direct.h>
 #include <fstream>
+#include <unistd.h>
 #include <time.h>
 #include <math.h>
-#include <regstr.h>
 
 #include <GL/glew.h>
 
@@ -41,6 +38,7 @@
 #include "sound/DummyMusicInterface.h"
 
 #include "misc/memmgr.h"
+#include "misc/regemu.h"
 
 using namespace Sexy;
 
@@ -1523,7 +1521,7 @@ bool SexyAppBase::RegistryWrite(const std::string& theValueName, ulong theType, 
 		return mDemoBuffer.ReadNumBits(1, false) != 0;		
 	}
 
-	HKEY aGameKey;
+	//HKEY aGameKey;
 	
 	std::string aKeyName = RemoveTrailingSlash("SOFTWARE\\" + mRegKey);
 	std::string aValueName;
@@ -1539,6 +1537,7 @@ bool SexyAppBase::RegistryWrite(const std::string& theValueName, ulong theType, 
 		aValueName = theValueName;
 	}
 
+	/*
 	int aResult = RegOpenKeyExA(HKEY_CURRENT_USER, aKeyName.c_str(), 0, KEY_WRITE, &aGameKey);
 	if (aResult != ERROR_SUCCESS)
 	{
@@ -1562,6 +1561,20 @@ bool SexyAppBase::RegistryWrite(const std::string& theValueName, ulong theType, 
 		
 	RegSetValueExA(aGameKey, aValueName.c_str(), 0, theType, theValue, theLength);
 	RegCloseKey(aGameKey);
+	*/
+
+	if (!regemu::RegistryWrite(aKeyName, aValueName, theType, theValue, theLength))
+	{
+		if (mRecordingDemoBuffer)
+		{
+			WriteDemoTimingBlock();
+			mDemoBuffer.WriteNumBits(0, 1);
+			mDemoBuffer.WriteNumBits(DEMO_REGISTRY_WRITE, 5);
+			mDemoBuffer.WriteNumBits(0, 1); // failure
+		}
+
+		return false;
+	}
 
 	if (mRecordingDemoBuffer)
 	{
@@ -1684,6 +1697,7 @@ void SexyAppBase::RegistryEraseValue(const SexyString& _theValueName)
 	}
 }
 
+/*
 bool SexyAppBase::RegistryGetSubKeys(const std::string& theKeyName, StringVector* theSubKeys)
 {
 	theSubKeys->clear();
@@ -1763,6 +1777,7 @@ bool SexyAppBase::RegistryGetSubKeys(const std::string& theKeyName, StringVector
 		}
 	}
 }
+*/
 
 bool SexyAppBase::RegistryRead(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength)
 {
@@ -1808,7 +1823,7 @@ bool SexyAppBase::RegistryReadKey(const std::string& theValueName, ulong* theTyp
 	}
 	else
 	{		
-		HKEY aGameKey;
+		//HKEY aGameKey;
 
 		std::string aKeyName = RemoveTrailingSlash("SOFTWARE\\" + mRegKey);
 		std::string aValueName;
@@ -1824,6 +1839,7 @@ bool SexyAppBase::RegistryReadKey(const std::string& theValueName, ulong* theTyp
 			aValueName = theValueName;
 		}		
 
+		/*
 		if (RegOpenKeyExA(theKey, aKeyName.c_str(), 0, KEY_READ, &aGameKey) == ERROR_SUCCESS)
 		{
 			if (RegQueryValueExA(aGameKey, aValueName.c_str(), 0, theType, (uchar*) theValue, theLength) == ERROR_SUCCESS)
@@ -1844,6 +1860,23 @@ bool SexyAppBase::RegistryReadKey(const std::string& theValueName, ulong* theTyp
 			}
 
 			RegCloseKey(aGameKey);
+		}
+		*/
+
+		if (regemu::RegistryRead(aKeyName, aValueName, (uint32_t*)theType, theValue, (uint32_t*)theLength))
+		{
+			if (mRecordingDemoBuffer)
+			{
+				WriteDemoTimingBlock();
+				mDemoBuffer.WriteNumBits(0, 1);
+				mDemoBuffer.WriteNumBits(DEMO_REGISTRY_READ, 5);
+				mDemoBuffer.WriteNumBits(1, 1); // success
+				mDemoBuffer.WriteLong(*theType);
+				mDemoBuffer.WriteLong(*theLength);
+				mDemoBuffer.WriteBytes(theValue, *theLength);
+			}
+
+			return true;
 		}
 
 		if (mRecordingDemoBuffer)
@@ -1920,7 +1953,9 @@ void SexyAppBase::ReadFromRegistry()
 	mRegKey = SexyStringToString(GetString("RegistryKey", StringToSexyString(mRegKey)));
 
 	if (mRegKey.length() == 0)
-		return;				
+		return;
+
+	regemu::SetRegFile("registry.regemu");
 
 	int anInt;
 	if (RegistryReadInteger("MusicVolume", &anInt))

@@ -556,7 +556,7 @@ public:
 	
 
 	// Registry access methods
-	bool					RegistryGetSubKeys(const std::string& theKeyName, StringVector* theSubKeys);
+	//bool					RegistryGetSubKeys(const std::string& theKeyName, StringVector* theSubKeys);
 	bool					RegistryReadString(const std::string& theValueName, std::string* theString);
 	bool					RegistryReadInteger(const std::string& theValueName, int* theValue);
 	bool					RegistryReadBoolean(const std::string& theValueName, bool* theValue);
