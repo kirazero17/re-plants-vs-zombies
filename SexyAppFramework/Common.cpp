@@ -735,8 +735,13 @@ bool Sexy::Deltree(const std::string& thePath)
 	while ((entry = readdir(dir)))
 	{
 		if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..")) continue;
-		if (entry->d_type == DT_DIR)
+		struct stat attr;
+		stat((aSourceDir + entry->d_name).c_str(), &attr);
+		if (S_ISDIR(attr.st_mode))
+		{
 			Deltree(aSourceDir + entry->d_name);
+			rmdir((aSourceDir + entry->d_name).c_str());
+		}
 		else
 			remove((aSourceDir + entry->d_name).c_str());
 	}
