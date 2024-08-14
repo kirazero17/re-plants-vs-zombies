@@ -1107,7 +1107,7 @@ void TodParticleSystem::OverrideColor(const char* theEmitterName, const Color& t
 	for (TodListNode<ParticleEmitterID>* aNode = mEmitterList.mHead; aNode != nullptr; aNode = aNode->mNext)
 	{
 		TodParticleEmitter* aEmitter = mParticleHolder->mEmitters.DataArrayGet((unsigned int)aNode->mValue);
-		if (theEmitterName == nullptr || stricmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
+		if (theEmitterName == nullptr || strcasecmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
 			aEmitter->mColorOverride = theColor;
 	}
 }
@@ -1118,7 +1118,7 @@ void TodParticleSystem::OverrideExtraAdditiveDraw(const char* theEmitterName, bo
 	for (TodListNode<ParticleEmitterID>* aNode = mEmitterList.mHead; aNode != nullptr; aNode = aNode->mNext)
 	{
 		TodParticleEmitter* aEmitter = mParticleHolder->mEmitters.DataArrayGet((unsigned int)aNode->mValue);
-		if (theEmitterName == nullptr || stricmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
+		if (theEmitterName == nullptr || strcasecmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
 			aEmitter->mExtraAdditiveDrawOverride = theEnableExtraAdditiveDraw;
 	}
 }
@@ -1130,7 +1130,7 @@ void TodParticleSystem::OverrideImage(const char* theEmitterName, Image* theImag
 	for (TodListNode<ParticleEmitterID>* aNode = mEmitterList.mHead; aNode != nullptr; aNode = aNode->mNext)
 	{
 		TodParticleEmitter* aEmitter = mParticleHolder->mEmitters.DataArrayGet((unsigned int)aNode->mValue);
-		if (theEmitterName == nullptr || stricmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
+		if (theEmitterName == nullptr || strcasecmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
 			aEmitter->mImageOverride = theImage;
 	}
 }
@@ -1140,7 +1140,7 @@ void TodParticleSystem::OverrideFrame(const char* theEmitterName, int theFrame)
 	for (TodListNode<ParticleEmitterID>* aNode = mEmitterList.mHead; aNode != nullptr; aNode = aNode->mNext)
 	{
 		TodParticleEmitter* aEmitter = mParticleHolder->mEmitters.DataArrayGet((unsigned int)aNode->mValue);
-		if (theEmitterName == nullptr || stricmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
+		if (theEmitterName == nullptr || strcasecmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
 			aEmitter->mFrameOverride = theFrame;
 	}
 }
@@ -1151,7 +1151,7 @@ void TodParticleSystem::OverrideScale(const char* theEmitterName, float theScale
 	for (TodListNode<ParticleEmitterID>* aNode = mEmitterList.mHead; aNode != nullptr; aNode = aNode->mNext)
 	{
 		TodParticleEmitter* aEmitter = mParticleHolder->mEmitters.DataArrayGet((unsigned int)aNode->mValue);
-		if (theEmitterName == nullptr || stricmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
+		if (theEmitterName == nullptr || strcasecmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
 			aEmitter->mScaleOverride = theScale;
 	}
 }
@@ -1161,7 +1161,7 @@ TodParticleEmitter* TodParticleSystem::FindEmitterByName(const char* theEmitterN
 	for (TodListNode<ParticleEmitterID>* aNode = mEmitterList.mHead; aNode != nullptr; aNode = aNode->mNext)
 	{
 		TodParticleEmitter* aEmitter = mParticleHolder->mEmitters.DataArrayGet((unsigned int)aNode->mValue);
-		if (stricmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
+		if (strcasecmp(theEmitterName, aEmitter->mEmitterDef->mName) == 0)
 			return aEmitter;
 	}
 	return nullptr;
@@ -1173,7 +1173,7 @@ TodEmitterDefinition* TodParticleSystem::FindEmitterDefByName(const char* theEmi
 	for (int i = 0; i < mParticleDef->mEmitterDefCount; i++)
 	{
 		TodEmitterDefinition* aEmitterDef = &mParticleDef->mEmitterDefs[i];
-		if (stricmp(theEmitterName, aEmitterDef->mName) == 0)
+		if (strcasecmp(theEmitterName, aEmitterDef->mName) == 0)
 			return aEmitterDef;
 	}
 	return nullptr;

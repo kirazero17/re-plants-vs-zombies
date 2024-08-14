@@ -499,7 +499,7 @@ void ZenGarden::MouseDownWithMoneySign(Plant* thePlant)
 void ZenGarden::PlantFertilized(Plant* thePlant)
 {
     PottedPlant* aPottedPlant = PottedPlantFromIndex(thePlant->mPottedPlantIndex);
-    aPottedPlant->mLastFertilizedTime = _time64(nullptr);
+    aPottedPlant->mLastFertilizedTime = time(0);
     aPottedPlant->mPlantAge = (PottedPlantAge)((int)aPottedPlant->mPlantAge + 1);
     aPottedPlant->mPlantNeed = PottedPlantNeed::PLANTNEED_NONE;
     aPottedPlant->mTimesFed = 0;
@@ -544,7 +544,7 @@ void ZenGarden::PlantFertilized(Plant* thePlant)
 void ZenGarden::PlantFulfillNeed(Plant* thePlant)
 {
     PottedPlant* aPottedPlant = PottedPlantFromIndex(thePlant->mPottedPlantIndex);
-    aPottedPlant->mLastNeedFulfilledTime = _time64(nullptr);
+    aPottedPlant->mLastNeedFulfilledTime = time(0);
     aPottedPlant->mPlantNeed = PottedPlantNeed::PLANTNEED_NONE;
     aPottedPlant->mTimesFed = 0;
 
@@ -623,7 +623,7 @@ void ZenGarden::PlantWatered(Plant* thePlant)
     {
         aTimeSpan = 9;
     }
-    aPottedPlant->mLastWateredTime = _time64(nullptr) - (__time64_t)aTimeSpan;
+    aPottedPlant->mLastWateredTime = time(0) - (time_t)aTimeSpan;
 
     mApp->PlayFoley(FoleyType::FOLEY_SPAWN_SUN);
     mBoard->AddCoin(thePlant->mX + 40, thePlant->mY, CoinType::COIN_SILVER, CoinMotion::COIN_MOTION_COIN);
@@ -779,7 +779,7 @@ void ZenGarden::RefreshPlantNeeds(PottedPlant* thePottedPlant)
 
     if (Plant::IsAquatic(thePottedPlant->mSeedType))
     {
-        thePottedPlant->mLastWateredTime = _time64(nullptr);
+        thePottedPlant->mLastWateredTime = time(0);
         thePottedPlant->mPlantNeed = (PottedPlantNeed)RandRangeInt((int)PottedPlantNeed::PLANTNEED_BUGSPRAY, (int)PottedPlantNeed::PLANTNEED_PHONOGRAPH);
     }
     else
@@ -806,7 +806,7 @@ void ZenGarden::UpdatePlantNeeds()
 
 bool ZenGarden::WasPlantFertilizedInLastHour(PottedPlant* thePottedPlant)
 {
-    return _time64(nullptr) - thePottedPlant->mLastFertilizedTime < 3600;
+    return time(0) - thePottedPlant->mLastFertilizedTime < 3600;
 }
 
 //0x51EA30
@@ -823,7 +823,7 @@ PottedPlantNeed ZenGarden::GetPlantsNeed(PottedPlant* thePottedPlant)
         return PottedPlantNeed::PLANTNEED_NONE;
     }
 
-    __time64_t aNow = _time64(nullptr);
+   time_t aNow = time(0);
     bool aTooLongSinceWatering = aNow - thePottedPlant->mLastWateredTime > 15;
     bool aTooShortSinceWatering = aNow - thePottedPlant->mLastWateredTime < 3;
 
@@ -902,7 +902,7 @@ void ZenGarden::MouseDownWithFeedingTool(int x, int y, CursorType theCursorType)
         {
             WakeStinky();
             mApp->AddTodParticle(aStinky->mPosX + 40.0f, aStinky->mPosY + 40.0f, aStinky->mRenderOrder + 1, ParticleEffect::PARTICLE_PRESENT_PICKUP);
-            mApp->mPlayerInfo->mLastStinkyChocolateTime = _time64(nullptr);
+            mApp->mPlayerInfo->mLastStinkyChocolateTime = time(0);
             mApp->mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_CHOCOLATE]--;
 
             mApp->PlayFoley(FoleyType::FOLEY_WAKEUP);
@@ -988,7 +988,7 @@ void ZenGarden::MouseDownWithFeedingTool(int x, int y, CursorType theCursorType)
 void ZenGarden::FeedChocolateToPlant(Plant* thePlant)
 {
     PottedPlant* aPottedPlant = PottedPlantFromIndex(thePlant->mPottedPlantIndex);
-    aPottedPlant->mLastChocolateTime = _time64(nullptr);
+    aPottedPlant->mLastChocolateTime = time(0);
     thePlant->mLaunchCounter = 60;
     mApp->AddTodParticle(thePlant->mX + 40.0f, thePlant->mY + 40.0f, thePlant->mRenderOrder + 1, ParticleEffect::PARTICLE_PRESENT_PICKUP);
 }
@@ -1275,7 +1275,7 @@ void ZenGarden::AddStinky()
     if (!mApp->mPlayerInfo->mHasSeenStinky)
     {
         mApp->mPlayerInfo->mHasSeenStinky = 1;
-        mApp->mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_STINKY_THE_SNAIL] = _time64(nullptr);
+        mApp->mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_STINKY_THE_SNAIL] = time(0);
     }
 
     GridItem* aStinky = mBoard->mGridItems.DataArrayAlloc();
@@ -1516,7 +1516,7 @@ void ZenGarden::StinkyUpdate(GridItem* theStinky)
 {
     Reanimation* aStinkyReanim = mApp->ReanimationGet(theStinky->mGridItemReanimID);
 
-    __time64_t aNow = _time64(nullptr);
+    time_t aNow = time(0);
     if (mApp->mPlayerInfo->mLastStinkyChocolateTime > aNow || 
         mApp->mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_STINKY_THE_SNAIL] > aNow)
     {
@@ -2230,7 +2230,7 @@ void ZenGarden::SetPlantAnimSpeed(Plant* thePlant)
 int ZenGarden::PlantGetMinutesSinceHappy(Plant* thePlant)
 {
     PottedPlant* aPottedPlant = PottedPlantFromIndex(thePlant->mPottedPlantIndex);
-    int aMinutes = (_time64(nullptr) - aPottedPlant->mLastNeedFulfilledTime) / 60;
+    int aMinutes = (time(0) - aPottedPlant->mLastNeedFulfilledTime) / 60;
     if (PlantHighOnChocolate(aPottedPlant))
     {
         aMinutes = 0;
@@ -2277,7 +2277,7 @@ void ZenGarden::ResetPlantTimers(PottedPlant* thePottedPlant)
 void ZenGarden::PottedPlantUpdate(Plant* thePlant)
 {
     PottedPlant* aPottedPlant = PottedPlantFromIndex(thePlant->mPottedPlantIndex);
-    __time64_t aNow = _time64(nullptr);
+    time_t aNow = time(0);
     if (aPottedPlant->mLastWateredTime > aNow || 
         aPottedPlant->mLastNeedFulfilledTime > aNow || 
         aPottedPlant->mLastFertilizedTime > aNow || 
@@ -2343,7 +2343,7 @@ void ZenGarden::DrawPlantOverlay(Graphics* g, Plant* thePlant)
 //0x521FE0
 void ZenGarden::WakeStinky()
 {
-    mApp->mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_STINKY_THE_SNAIL] = _time64(nullptr);
+    mApp->mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_STINKY_THE_SNAIL] = time(0);
     mApp->PlaySample(SOUND_TAP);
     mBoard->ClearAdvice(AdviceType::ADVICE_STINKY_SLEEPING);
     gLawnApp->mPlayerInfo->mHasWokenStinky = TRUE;
@@ -2352,12 +2352,12 @@ void ZenGarden::WakeStinky()
 //0x522090
 bool ZenGarden::IsStinkyHighOnChocolate()
 {
-    return _time64(nullptr) - mApp->mPlayerInfo->mLastStinkyChocolateTime < 3600;
+    return time(0) - mApp->mPlayerInfo->mLastStinkyChocolateTime < 3600;
 }
 
 bool ZenGarden::PlantHighOnChocolate(PottedPlant* thePottedPlant)
 {
-    return _time64(nullptr) - thePottedPlant->mLastChocolateTime < 300;
+    return time(0) - thePottedPlant->mLastChocolateTime < 300;
 }
 
 bool ZenGarden::IsStinkySleeping()
@@ -2373,7 +2373,7 @@ bool ZenGarden::ShouldStinkyBeAwake()
     {
         return true;
     }
-    return _time64(nullptr) - mApp->mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_STINKY_THE_SNAIL] < 180;
+    return time(0) - mApp->mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_STINKY_THE_SNAIL] < 180;
 }
 
 //0x522110

@@ -1428,7 +1428,7 @@ void CreditScreen::TurnOffTongues(Reanimation* theReanim, int aParentTrack)
     {
         ReanimatorTrackInstance* aTrackInstance = &theReanim->mTrackInstances[aTrackIndex];
         if (theReanim->mReanimationType == ReanimationType::REANIM_ZOMBIE_CREDITS_DANCE &&
-            aParentTrack % 4 != 1 && stricmp(theReanim->mDefinition->mTracks.tracks[aTrackIndex].mName, "anim_tongue") == 0)
+            aParentTrack % 4 != 1 && strcasecmp(theReanim->mDefinition->mTracks.tracks[aTrackIndex].mName, "anim_tongue") == 0)
         {
             aTrackInstance->mRenderGroup = RENDER_GROUP_HIDDEN;
         }
@@ -1442,13 +1442,15 @@ void CreditScreen::TurnOffTongues(Reanimation* theReanim, int aParentTrack)
 }
 
 //0x437FC0
+/*
 void TodsHackyUnprotectedPerfTimer::SetStartTime(int theTimeMillisecondsAgo)
 {
-    QueryPerformanceCounter(&mStart);
+    SDL_GetPerformanceCounter(&mStart);
     LARGE_INTEGER aFreq;
     QueryPerformanceFrequency(&aFreq);
     mStart.QuadPart += theTimeMillisecondsAgo * aFreq.QuadPart / -1000;
 }
+*/
 
 //0x438010
 void CreditScreen::JumpToFrame(CreditsPhase thePhase, float theFrame)
@@ -1566,7 +1568,7 @@ void CreditScreen::JumpToFrame(CreditsPhase thePhase, float theFrame)
     }
 
     mCreditsPhase = thePhase;
-    ((TodsHackyUnprotectedPerfTimer*)&mTimerSinceStart)->SetStartTime(aJumpMilliseconds);
+    //((TodsHackyUnprotectedPerfTimer*)&mTimerSinceStart)->SetStartTime(aJumpMilliseconds);
 }
 
 void CreditScreen::KeyChar(SexyChar theChar)

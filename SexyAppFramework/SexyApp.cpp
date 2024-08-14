@@ -1,11 +1,12 @@
 #include "SexyApp.h"
 
 //#include "..\Crypt\RegKey.h"
-#include "misc/SEHCatcher.h"
+//#include "misc/SEHCatcher.h"
 //#include "InternetManager.h"
 #include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include <fstream>
-#include <direct.h>
 //#include "BetaSupport.h"
 
 using namespace Sexy;
@@ -295,6 +296,8 @@ void SexyApp::WriteToRegistry()
 
 bool SexyApp::OpenHTMLTemplate(const std::string& theTemplateFile, const DefinesMap& theDefinesMap)
 {
+	return false;
+	/*
 	std::fstream anInStream(theTemplateFile.c_str(), std::ios::in);
 
 	if (!anInStream.is_open())
@@ -334,6 +337,7 @@ bool SexyApp::OpenHTMLTemplate(const std::string& theTemplateFile, const Defines
 	}
 	
 	return OpenURL(GetFullPath(anOutFilename));
+	*/
 }
 
 bool SexyApp::OpenRegisterPage(DefinesMap theStatsMap)
@@ -518,7 +522,8 @@ void SexyApp::HandleCmdLineParam(const std::string& theParamName, const std::str
 			"Build Num: " + StrFormat("%d", mBuildNum) + "\r\n" +
 			"Build Date: " + mBuildDate;
 
-		MessageBox(NULL, aVersionString.c_str(), "Version Info", MB_ICONINFORMATION | MB_OK);
+		//MessageBox(NULL, aVersionString.c_str(), "Version Info", MB_ICONINFORMATION | MB_OK);
+		printf("%s\n", aVersionString.c_str());
 		DoExit(0);
 	}
 	else
@@ -593,6 +598,7 @@ void SexyApp::InitPropertiesHook()
 
 void SexyApp::Init()
 {
+	/*
 	SEHCatcher::mCrashMessage = 
 		L"An unexpected error has occured!  Pressing 'Send Report' "
 		"will send us helpful debugging information that may help "
@@ -615,6 +621,11 @@ void SexyApp::Init()
 	OutputDebugString(StrFormat("Product: %s\r\n", mProdName.c_str()).c_str());	
 	OutputDebugString(StrFormat("BuildNum: %d\r\n", mBuildNum).c_str());
 	OutputDebugString(StrFormat("BuildDate: %s\r\n", mBuildDate.c_str()).c_str());	
+	*/
+
+	printf("Product: %s\n", mProdName.c_str());
+	printf("BuildNum: %d\n", mBuildNum);
+	printf("BuildDate: %s\n", mBuildDate.c_str());
 
 	SexyAppBase::Init();
 

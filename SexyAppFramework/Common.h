@@ -30,35 +30,47 @@
 
 #include <wctype.h>
 #include <string.h>
+#include <stdint.h>
 #define _stricmp strcasecmp
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-typedef unsigned int UINT;
+#define _cdecl
+typedef uint8_t BYTE;
+typedef uint16_t WORD;
+typedef uint32_t DWORD;
+typedef uint64_t QWORD;
+typedef uint32_t UINT;
+typedef int64_t __int64;
 typedef int INT;
 typedef long LONG;
 typedef unsigned long ULONG;
 typedef LONG WINBOOL;
-typedef ULONG DWORD;
-typedef void *HANDLE;
-typedef WORD *LPWORD;
-typedef DWORD *LPDWORD;
+typedef void* HANDLE;
+typedef WORD* LPWORD;
+typedef DWORD* LPDWORD;
 typedef char CHAR;
-typedef CHAR *LPSTR;
-typedef const CHAR *LPCSTR;
+typedef CHAR* LPSTR;
+typedef const CHAR* LPCSTR;
 typedef wchar_t WCHAR;
 typedef WCHAR TCHAR;
-typedef WCHAR *LPWSTR;
-typedef TCHAR *LPTSTR;
-typedef const WCHAR *LPCWSTR;
-typedef const TCHAR *LPCTSTR;
-typedef HANDLE *LPHANDLE;
+typedef WCHAR* LPWSTR;
+typedef TCHAR* LPTSTR;
+typedef const WCHAR* LPCWSTR;
+typedef const TCHAR* LPCTSTR;
+typedef HANDLE* LPHANDLE;
+typedef HANDLE HWND;
 
 typedef struct tagRECT {
-  LONG left;
-  LONG top;
-  LONG right;
-  LONG bottom;
+	LONG left;
+	LONG top;
+	LONG right;
+	LONG bottom;
 } RECT, *PRECT, *NPRECT, *LPRECT;
+
+typedef struct _GUID {
+	unsigned long  Data1;
+	unsigned short Data2;
+	unsigned short Data3;
+	unsigned char  Data4[8];
+} GUID;
 
 #endif
 

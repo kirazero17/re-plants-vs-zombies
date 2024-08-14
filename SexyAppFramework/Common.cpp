@@ -1,14 +1,20 @@
 #include "Common.h"
 #include "misc/MTRand.h"
 #include "misc/Debug.h"
-#include <direct.h>
-#include <io.h>
+#include <locale>
+#include <codecvt>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <aclapi.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <stdarg.h>
 
 #include "misc/PerfTimer.h"
+
+#ifdef _WIN32
+#define mkdir(dir, mode) mkdir(dir)
+#endif
 
 //HINSTANCE Sexy::gHInstance;
 bool Sexy::gDebug = false;
@@ -519,7 +525,7 @@ SexyString Sexy::CommaSeperate(int theValue)
 std::string Sexy::GetCurDir()
 {
 	char aDir[256];
-	return _getcwd(aDir, sizeof(aDir));
+	return getcwd(aDir, sizeof(aDir));
 }
 
 std::string Sexy::GetFullPath(const std::string& theRelPath)
@@ -627,6 +633,9 @@ std::string Sexy::GetPathFrom(const std::string& theRelPath, const std::string& 
 
 bool Sexy::AllowAllAccess(const std::string& theFileName)
 {
+	return false;
+	// brain rot
+	/*
 	HMODULE aLib = LoadLibraryA("advapi32.dll");
 	if (aLib == NULL)
 		return false;
@@ -710,10 +719,33 @@ bool Sexy::AllowAllAccess(const std::string& theFileName)
 
 	FreeLibrary(aLib);
 	return result;
+	*/
 }
 
 bool Sexy::Deltree(const std::string& thePath)
 {
+	std::string aSourceDir = thePath;
+	if (aSourceDir.at(aSourceDir.size()-1) != '/')
+		aSourceDir += "/";
+
+	struct dirent* entry;
+	DIR* dir = opendir(thePath.c_str());
+	if (!dir) return false;
+
+	while ((entry = readdir(dir)))
+	{
+		if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..")) continue;
+		if (entry->d_type == DT_DIR)
+			Deltree(aSourceDir + entry->d_name);
+		else
+			remove((aSourceDir + entry->d_name).c_str());
+	}
+
+	closedir(dir);
+	rmdir(thePath.c_str());
+	return true;
+
+	/*
 	bool success = true;
 
 	std::string aSourceDir = thePath;
@@ -757,10 +789,13 @@ bool Sexy::Deltree(const std::string& thePath)
 		success = false;
 
 	return success;
+	*/
 }
 
 bool Sexy::FileExists(const std::string& theFileName)
 {
+	return (access(theFileName.c_str(), F_OK) == 0);
+	/*
 	WIN32_FIND_DATAA aFindData;
 	
 	HANDLE aFindHandle = FindFirstFileA(theFileName.c_str(), &aFindData); 
@@ -769,6 +804,7 @@ bool Sexy::FileExists(const std::string& theFileName)
 
 	FindClose(aFindHandle);
 	return true;
+	*/
 }
 
 void Sexy::MkDir(const std::string& theDir)
@@ -781,14 +817,14 @@ void Sexy::MkDir(const std::string& theDir)
 		int aSlashPos = aPath.find_first_of("\\/", aCurPos);
 		if (aSlashPos == -1)
 		{
-			_mkdir(aPath.c_str());
+			mkdir(aPath.c_str(), 0755);
 			break;
 		}
 
 		aCurPos = aSlashPos+1;
 
 		std::string aCurPath = aPath.substr(0, aSlashPos);
-		_mkdir(aCurPath.c_str());
+		mkdir(aCurPath.c_str(), 0755);
 	}
 }
 
@@ -851,6 +887,11 @@ std::string	Sexy::AddTrailingSlash(const std::string& theDirectory, bool backSla
 
 time_t Sexy::GetFileDate(const std::string& theFileName)
 {
+	struct stat attr;
+	if (stat(theFileName.c_str(), &attr) == 0) return 0;
+	return attr.st_mtime;
+
+	/*
 	time_t aFileDate = 0;
 
 	WIN32_FIND_DATAA aFindData;
@@ -870,6 +911,7 @@ time_t Sexy::GetFileDate(const std::string& theFileName)
 	}
 
 	return aFileDate;
+	*/
 }
 
 std::string Sexy::vformat(const char* fmt, va_list argPtr) 
@@ -955,7 +997,7 @@ std::wstring Sexy::vformat(const wchar_t* fmt, va_list argPtr)
 #ifdef _WIN32
 	numChars = _vsnwprintf(stackBuffer, attemptedSize, fmt, argPtr);
 #else
-	numChars = vsnwprintf(stackBuffer, attemptedSize, fmt, argPtr);
+	numChars = vswprintf(stackBuffer, attemptedSize, fmt, argPtr);
 #endif
 
 	//cout << "NumChars: " << numChars << endl;
@@ -981,7 +1023,7 @@ std::wstring Sexy::vformat(const wchar_t* fmt, va_list argPtr)
 #ifdef _WIN32
 		numChars = _vsnwprintf(heapBuffer, attemptedSize, fmt, argPtr);
 #else
-		numChars = vsnwprintf(heapBuffer, attemptedSize, fmt, argPtr);
+		numChars = vswprintf(heapBuffer, attemptedSize, fmt, argPtr);
 #endif
     }
 
@@ -1325,12 +1367,16 @@ bool Sexy::StrPrefixNoCase(const char *theStr, const char *thePrefix, int maxLen
 
 std::wstring Sexy::UTF8StringToWString(const std::string theString)
 {
+	std::wstring_convert<std::codecvt_utf8<wchar_t> > cv;
+	return cv.from_bytes(theString);
+	/*
 	int size = MultiByteToWideChar(CP_UTF8, 0, theString.c_str(), theString.length() + 1, nullptr, 0);
 	wchar_t* buffer = new wchar_t[size];
 	MultiByteToWideChar(CP_UTF8, 0, theString.c_str(), theString.length() + 1, buffer, size);
 	std::wstring result = buffer;
 	delete[] buffer;
 	return result;
+	*/
 }
 
 void Sexy::SMemR(void*& _Src, void* _Dst, size_t _Size)

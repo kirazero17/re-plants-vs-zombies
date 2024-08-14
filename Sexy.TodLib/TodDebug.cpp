@@ -8,8 +8,8 @@
 
 using namespace Sexy;
 
-static char gLogFileName[MAX_PATH];
-static char gDebugDataFolder[MAX_PATH];
+static char gLogFileName[512];
+static char gDebugDataFolder[512];
 
 //0x514EA0
 void TodErrorMessageBox(const char* theMessage, const char* theTitle)
@@ -134,7 +134,7 @@ void TodTrace(const char* theFormat, ...)
 		}
 	}
 
-	printf(aButter);
+	printf("%s", aButter);
 }
 
 void TodHesitationTrace(...)
@@ -162,7 +162,7 @@ void TodTraceAndLog(const char* theFormat, ...)
 		}
 	}
 
-	printf(aButter);
+	printf("%s", aButter);
 	TodLogString(aButter);
 }
 
@@ -195,7 +195,7 @@ void TodTraceWithoutSpamming(const char* theFormat, ...)
 		}
 	}
 
-	printf(aButter);
+	printf("%s", aButter);
 }
 
 void TodAssertInitForApp()
@@ -205,7 +205,7 @@ void TodAssertInitForApp()
 	strcpy(gDebugDataFolder, GetFullPath(aRelativeUserPath).c_str());
 	strcpy(gLogFileName, gDebugDataFolder);
 	strcpy(gLogFileName + strlen(gLogFileName), "log.txt");
-	TOD_ASSERT(strlen(gLogFileName) < MAX_PATH);
+	TOD_ASSERT(strlen(gLogFileName) < 512);
 
 	TodLog("Started %d\n", (uint64_t)time(NULL));
 }

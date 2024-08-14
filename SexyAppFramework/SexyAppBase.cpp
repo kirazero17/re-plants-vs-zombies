@@ -11,7 +11,7 @@
 #include <GL/glew.h>
 
 #include "SexyAppBase.h"
-#include "misc/SEHCatcher.h"
+//#include "misc/SEHCatcher.h"
 #include "widget/WidgetManager.h"
 #include "widget/Widget.h"
 #include "misc/Debug.h"
@@ -38,7 +38,7 @@
 #include "sound/DummyMusicInterface.h"
 
 #include "misc/memmgr.h"
-#include "misc/regemu.h"
+#include "misc/RegEmu.h"
 
 using namespace Sexy;
 
@@ -47,15 +47,15 @@ const int DEMO_VERSION = 2;
 
 SexyAppBase* Sexy::gSexyAppBase = NULL;
 
-SEHCatcher Sexy::gSEHCatcher;
+//SEHCatcher Sexy::gSEHCatcher;
 
 //HMODULE gDDrawDLL = NULL;
 //HMODULE gDSoundDLL = NULL;
 //HMODULE gVersionDLL = NULL;
 
 //typedef struct { UINT cbSize; DWORD dwTime; } LASTINPUTINFO;
-typedef BOOL (WINAPI*GetLastInputInfoFunc)(LASTINPUTINFO *plii);
-GetLastInputInfoFunc gGetLastInputInfoFunc = NULL;
+//typedef BOOL (WINAPI*GetLastInputInfoFunc)(LASTINPUTINFO *plii);
+//GetLastInputInfoFunc gGetLastInputInfoFunc = NULL;
 static bool gScreenSaverActive = false;
 
 #ifndef SPI_GETSCREENSAVERRUNNING
@@ -112,6 +112,7 @@ static GLImage* gFPSImage = NULL;
 
 //////////////////////////////////////////////////////////////////////////
 
+/*
 typedef HRESULT (WINAPI *SHGetFolderPathFunc)(HWND, int, HANDLE, DWORD, LPTSTR);
 void* GetSHGetFolderPath(const char* theDLL, HMODULE* theMod)
 {
@@ -131,12 +132,15 @@ void* GetSHGetFolderPath(const char* theDLL, HMODULE* theMod)
 	*theMod = aMod;
 	return (void *)aFunc;
 }
+*/
 
 //////////////////////////////////////////////////////////////////////////
 
 SexyAppBase::SexyAppBase()
 {
 	gSexyAppBase = this;
+
+	SDL_Init(SDL_INIT_TIMER);
 
 	//gVersionDLL = LoadLibraryA("version.dll");
 	//gDDrawDLL = LoadLibraryA("ddraw.dll");
@@ -145,7 +149,7 @@ SexyAppBase::SexyAppBase()
 
 	//ImageLib::InitJPEG2000();
 
-	mMutex = NULL;
+	//mMutex = NULL;
 	mNotifyGameMessage = 0;
 
 #ifdef _DEBUG
@@ -162,7 +166,7 @@ SexyAppBase::SexyAppBase()
 
 	mNoDefer = false;	
 	mFullScreenPageFlip = true; // should we page flip in fullscreen?
-	mTimeLoaded = GetTickCount();
+	mTimeLoaded = SDL_GetTicks();
 	mSEHOccured = false;
 	mProdName = "Product";
 	mTitle = _S("SexyApp");
@@ -218,8 +222,8 @@ SexyAppBase::SexyAppBase()
 	mCursorThreadRunning = false;
 	mNumLoadingThreadTasks = 0;
 	mCompletedLoadingThreadTasks = 0;	
-	mLastDrawTick = timeGetTime();
-	mNextDrawTick = timeGetTime();
+	mLastDrawTick = time(0);
+	mNextDrawTick = time(0);
 	mSysCursor = true;	
 	mForceFullscreen = false;
 	mForceWindowed = false;
@@ -253,7 +257,7 @@ SexyAppBase::SexyAppBase()
 	mMuteOnLostFocus = false;
 	mCurHandleNum = 0;
 	mFPSTime = 0;
-	mFPSStartTick = GetTickCount();
+	mFPSStartTick = SDL_GetTicks();
 	mFPSFlipCount = 0;
 	mFPSCount = 0;
 	mFPSDirtyCount = 0;
@@ -332,15 +336,16 @@ SexyAppBase::SexyAppBase()
 
 	mPrimaryThreadId = 0;
 
+	/*
 	if (GetSystemMetrics(86)) // check for tablet pc
 	{
 		mTabletPC = true;
 		mFullScreenPageFlip = false; // so that tablet keyboard can show up
 	}
-	else
-		mTabletPC = false;	
+	else*/
+	mTabletPC = false;
 
-	gSEHCatcher.mApp = this;	
+	//gSEHCatcher.mApp = this;	
 	
 	//std::wifstream stringsFile(_wfopen(L".\\properties\\fstrings", L"rb"));
 	//
@@ -371,6 +376,7 @@ SexyAppBase::~SexyAppBase()
 {
 	Shutdown();
 
+	/*
 	// Check if we should write the current 3d setting
 	bool showedMsgBox = false;
 	if (mUserChanged3DSetting)
@@ -403,13 +409,10 @@ SexyAppBase::~SexyAppBase()
 			}
 		}
 
-		/*
 		if (writeToRegistry)
 			RegistryWriteBoolean("Is3D", mDDInterface->mIs3D);
-		*/
 	}
 
-	/*
 	if (!showedMsgBox && gD3DInterfacePreDrawError && !IsScreenSaver())
 	{
 		int aResult = MessageBox(NULL, 
@@ -490,8 +493,8 @@ SexyAppBase::~SexyAppBase()
 
 	WriteDemoBuffer();
 
-	if (mMutex != NULL)
-		::CloseHandle(mMutex);	
+	//if (mMutex != NULL)
+		//::CloseHandle(mMutex);
 
 	/*
 	FreeLibrary(gDDrawDLL);
@@ -535,7 +538,7 @@ static BOOL CALLBACK ChangeDisplayWindowEnumProc(HWND hwnd, LPARAM lParam)
 
 void SexyAppBase::ClearUpdateBacklog(bool relaxForASecond)
 {
-	mLastTimeCheck = timeGetTime();
+	mLastTimeCheck = time(0);
 	mUpdateFTimeAcc = 0.0;
 
 	if (relaxForASecond)
@@ -1074,7 +1077,7 @@ bool SexyAppBase::OpenURL(const std::string& theURL, bool shutdownOnOpen)
 		mShutdownOnURLOpen = shutdownOnOpen;
 		mIsOpeningURL = true;
 		mOpeningURL = theURL;
-		mOpeningURLTime = GetTickCount();		
+		mOpeningURLTime = SDL_GetTicks();
 
 		if ((intptr_t) ShellExecuteA(NULL, "open", theURL.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32)
 		{
@@ -2188,7 +2191,7 @@ void SexyAppBase::SEHOccured()
 
 std::string SexyAppBase::GetGameSEHInfo()
 {
-	int aSecLoaded = (GetTickCount() - mTimeLoaded) / 1000;
+	int aSecLoaded = (SDL_GetTicks() - mTimeLoaded) / 1000;
 
 	char aTimeStr[16];
 	sprintf(aTimeStr, "%02d:%02d:%02d", (aSecLoaded/60/60), (aSecLoaded/60)%60, aSecLoaded%60);
@@ -2383,7 +2386,7 @@ void SexyAppBase::Redraw(Rect* theClipRect)
 		::GetWindowPlacement(mHWnd, &aWindowPlacement);
 		*/
 
-		DWORD aTick = GetTickCount();
+		DWORD aTick = SDL_GetTicks();
 		//if ((mActive || (aTick-aRetryTick>1000 && mIsPhysWindowed)) && (aWindowPlacement.showCmd != SW_SHOWMINIMIZED) && (!mMinimized))
 		if ((mActive || (aTick-aRetryTick>1000 && mIsPhysWindowed)) && (!mMinimized))
 		{
@@ -2443,7 +2446,7 @@ void SexyAppBase::Redraw(Rect* theClipRect)
 			mWidgetManager->mImage = mGLInterface->GetScreenImage();
 			mWidgetManager->MarkAllDirty();
 
-			mLastTime = timeGetTime();
+			mLastTime = time(0);
 		}
 	}
 	else
@@ -2581,6 +2584,7 @@ static void CalculateDemoTimeLeft()
 
 static void UpdateScreenSaverInfo(DWORD theTick)
 {
+	/*
 	if (gSexyAppBase->IsScreenSaver() || !gSexyAppBase->mIsPhysWindowed)
 		return;
 
@@ -2643,6 +2647,7 @@ static void UpdateScreenSaverInfo(DWORD theTick)
 	}
 	else if (anIdleTime > aScreenSaverTimeout)
 		gScreenSaverActive = true;
+	*/
 }
 
 bool SexyAppBase::DrawDirtyStuff()
@@ -2673,7 +2678,7 @@ bool SexyAppBase::DrawDirtyStuff()
 			CalculateDemoTimeLeft();
 	}
 
-	DWORD aStartTime = timeGetTime();
+	DWORD aStartTime = time(0);
 
 	// Update user input and screen saver info
 	static DWORD aPeriodicTick = 0;
@@ -2701,7 +2706,7 @@ bool SexyAppBase::DrawDirtyStuff()
 
 		mDrawCount++;		
 
-		DWORD aMidTime = timeGetTime();
+		DWORD aMidTime = time(0);
 
 		mFPSCount++;
 		mFPSTime += aMidTime - aStartTime;
@@ -2720,13 +2725,13 @@ bool SexyAppBase::DrawDirtyStuff()
 		/*
 		if (mWaitForVSync && mIsPhysWindowed && mSoftVSyncWait)
 		{
-			DWORD aTick = timeGetTime();
+			DWORD aTick = time(0);
 			if (aTick-mLastDrawTick < mGLInterface->mMillisecondsPerFrame)
 				Sleep(mDDInterface->mMillisecondsPerFrame - (aTick-mLastDrawTick));
 		}
 		*/
 
-		DWORD aPreScreenBltTime = timeGetTime();
+		DWORD aPreScreenBltTime = time(0);
 		mLastDrawTick = aPreScreenBltTime;
 
 		Redraw(NULL);		
@@ -2734,7 +2739,7 @@ bool SexyAppBase::DrawDirtyStuff()
 		// This is our one UpdateFTimeAcc if we are vsynched
 		UpdateFTimeAcc(); 
 
-		DWORD aEndTime = timeGetTime();
+		DWORD aEndTime = time(0);
 
 		mScreenBltTime = aEndTime - aPreScreenBltTime;
 
@@ -3077,7 +3082,7 @@ static int ListDemoMarkers()
     GlobalFree(hgbl); 
 	*/
 
-	gSexyAppBase->mLastTime = timeGetTime();
+	gSexyAppBase->mLastTime = time(0);
 
     return 0; 
 }
@@ -3249,7 +3254,7 @@ static int DemoJumpToTime()
     GlobalFree(hgbl); 
 	*/
 
-	gSexyAppBase->mLastTime = timeGetTime();
+	gSexyAppBase->mLastTime = time(0);
 
     return 0; 
 }
@@ -3588,7 +3593,7 @@ void SexyAppBase::ShowMemoryUsage()
 	aStr += StrFormat("Palette8: %d - %s KB\r\n",aUsage.first,SexyStringToString(CommaSeperate(aUsage.second/1024)).c_str());
 	
 	MsgBox(aStr,"Video Stats",MB_OK);
-	mLastTime = timeGetTime();
+	mLastTime = time(0);
 }
 
 bool SexyAppBase::DebugKeyDown(int theKey)
@@ -3637,7 +3642,7 @@ bool SexyAppBase::DebugKeyDown(int theKey)
 			char aBuf[512];
 			sprintf(aBuf,"3D-Mode: %s",Is3DAccelerated()?"ON":"OFF");
 			MsgBox(aBuf,"Mode Switch",MB_OK);
-			mLastTime = timeGetTime();
+			mLastTime = time(0);
 		}
 		else
 			ShowMemoryUsage();
@@ -4653,7 +4658,7 @@ void SexyAppBase::CursorThreadProc()
 		if ((aCursorPos.x != aLastCursorPos.x) ||
 			(aCursorPos.y != aLastCursorPos.y))
 		{	
-			DWORD aTimeNow = timeGetTime();
+			DWORD aTimeNow = time(0);
 			if (aTimeNow - mNextDrawTick > mGLInterface->mMillisecondsPerFrame + 5)
 			{
 				// Do the special drawing if we are rendering at less than full framerate				
@@ -4738,7 +4743,7 @@ void SexyAppBase::SwitchScreenMode(bool wantWindowed, bool is3d, bool force)
 		//mSoundManager->SetCooperativeWindow(mHWnd);
 	}	
 
-	mLastTime = timeGetTime();
+	mLastTime = time(0);
 }
 
 void SexyAppBase::SwitchScreenMode(bool wantWindowed)
@@ -4883,7 +4888,7 @@ void SexyAppBase::ProcessSafeDeleteList()
 
 void SexyAppBase::UpdateFTimeAcc()
 {
-	DWORD aCurTime = timeGetTime();
+	DWORD aCurTime = time(0);
 
 	if (mLastTimeCheck != 0)
 	{				
@@ -5007,7 +5012,7 @@ bool SexyAppBase::Process(bool allowSleep)
 	// Make sure we're not paused
 	if ((!mPaused) && (mUpdateMultiplier > 0))
 	{
-		ulong aStartTime = timeGetTime();
+		ulong aStartTime = time(0);
 		
 		// ulong aCurTime = aStartTime; // Unused
 		int aCumSleepTime = 0;
@@ -5152,7 +5157,7 @@ bool SexyAppBase::Process(bool allowSleep)
 			// This is to make sure that the title screen doesn't take up any more than 
 			// 1/3 of the processor time
 
-			ulong anEndTime = timeGetTime();
+			ulong anEndTime = time(0);
 			int anElapsedTime = (anEndTime - aStartTime) - aCumSleepTime;
 			int aLoadingYieldSleepTime = std::min(250, (anElapsedTime * 2) - aCumSleepTime);
 
@@ -5328,7 +5333,7 @@ void SexyAppBase::Start()
 	//int aCount = 0; // unused
 	//int aSleepCount = 0; // unused
 
-	DWORD aStartTime = timeGetTime();		
+	DWORD aStartTime = time(0);		
 
 	mRunning = true;
 	mLastTime = aStartTime;
@@ -5343,7 +5348,7 @@ void SexyAppBase::Start()
 	WaitForLoadingThread();
 
 	char aString[256];
-	sprintf(aString, "Seconds       = %g\r\n", (timeGetTime() - aStartTime) / 1000.0);
+	sprintf(aString, "Seconds       = %g\r\n", (time(0) - aStartTime) / 1000.0);
 	OutputDebugStringA(aString);
 	//sprintf(aString, "Count         = %d\r\n", aCount);
 	//OutputDebugString(aString);
@@ -5829,12 +5834,14 @@ void SexyAppBase::Init()
 	mNotifyGameMessage = RegisterWindowMessage((_S("Notify") + StringToSexyString(mProdName)).c_str());
 
 	// Create a globally unique mutex
+	/*
 	mMutex = CreateMutex(NULL, TRUE, (StringToSexyString(mProdName) + _S("Mutex")).c_str());
 	if (::GetLastError() == ERROR_ALREADY_EXISTS)
 		HandleGameAlreadyRunning();
+	*/
 
-	mRandSeed = GetTickCount();
-	SRand(mRandSeed);	
+	mRandSeed = SDL_GetTicks();
+	SRand(mRandSeed);
 
 	// Set up demo recording stuff
 	if (mPlayingDemoBuffer)

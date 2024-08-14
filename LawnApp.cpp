@@ -1,4 +1,4 @@
-#include <corecrt.h>
+//#include <corecrt.h>
 #include <time.h>
 #include "LawnApp.h"
 #include "Lawn/Board.h"
@@ -107,7 +107,7 @@ LawnApp::LawnApp()
 	mHeight = BOARD_HEIGHT;
 	mFullscreenBits = 32;
 	mAppCounter = 0;
-	mAppRandSeed = _time64(nullptr);
+	mAppRandSeed = time(0);
 	mTrialType = TrialType::TRIALTYPE_NONE;
 	mDebugTrialLocked = false;
 	mMuteSoundsForCutscene = false;
@@ -144,7 +144,7 @@ LawnApp::LawnApp()
 	mCrazyDaveBlinkCounter = 0;
 	mCrazyDaveBlinkReanimID = ReanimationID::REANIMATIONID_NULL;
 	mCrazyDaveMessageIndex = -1;
-	mBigArrowCursor = LoadCursor(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_CURSOR1));
+	//mBigArrowCursor = LoadCursor(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_CURSOR1));
 	mDRM = nullptr;
 }
 
@@ -1261,7 +1261,7 @@ void LawnApp::Init()
 	//	gSexyCache->Disconnect();
 	//}
 
-	mSessionID = _time64(nullptr);
+	mSessionID = time(0);
 	mPlayTimeActiveSession = 0;
 	mPlayTimeInactiveSession = 0;
 	mBoardResult = BoardResult::BOARDRESULT_NONE;
@@ -1593,7 +1593,7 @@ void LawnApp::UpdatePlayTimeStats()
 {
 	static int aLastTime = -1;
 
-	int aTickCount = GetTickCount();
+	int aTickCount = SDL_GetTicks();
 	int aSession = (aTickCount - aLastTime) / 1000;
 
 	if (mPlayerInfo && !mPlayerInfo->mHasUsedCheatKeys && !mDebugKeysEnabled && mTodCheatKeys)

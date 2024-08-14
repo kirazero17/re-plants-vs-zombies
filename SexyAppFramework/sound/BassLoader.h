@@ -7,7 +7,6 @@
 #include <windows.h>
 typedef HMODULE LibModule;
 #else
-#include <dlfcn.h>
 typedef void* LibModule;
 #endif
 
@@ -33,7 +32,7 @@ struct BASS_INSTANCE
 
 
 
-    HMODULE         mModule;
+	LibModule         mModule;
 	bool			mVersion2;
 
 	DWORD(WINAPI *BASS_GetVersion)();

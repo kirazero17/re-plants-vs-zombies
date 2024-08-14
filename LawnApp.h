@@ -97,7 +97,7 @@ public:
 	int								mCrazyDaveMessageIndex;							//+0x850
 	SexyString						mCrazyDaveMessageText;							//+0x854
 	int								mAppRandSeed;									//+0x870
-	HICON							mBigArrowCursor;								//+0x874
+	//HICON							mBigArrowCursor;								//+0x874
 	PopDRMComm*						mDRM;											//+0x878
 	intptr_t						mSessionID;										//+0x87C
 	int								mPlayTimeActiveSession;							//+0x880

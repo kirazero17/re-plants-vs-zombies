@@ -205,8 +205,8 @@ public:
 	int								mPlayTimeActiveLevel;									//+0x5770
 	int								mPlayTimeInactiveLevel;									//+0x5774
 	int								mMaxSunPlants;											//+0x5778
-	DWORD							mStartDrawTime;											//+0x577C
-	DWORD							mIntervalDrawTime;										//+0x5780
+	int64_t							mStartDrawTime;											//+0x577C
+	int64_t							mIntervalDrawTime;										//+0x5780
 	int								mIntervalDrawCountStart;								//+0x5784
 	float							mMinFPS;												//+0x5788
 	int								mPreloadTime;											//+0x578C

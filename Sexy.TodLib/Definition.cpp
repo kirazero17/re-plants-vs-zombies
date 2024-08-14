@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <cstring>
 #include <stddef.h>
+#include <sys/stat.h>
 #include "TodDebug.h"
 #include "Definition.h"
 #include "zlib.h"
@@ -429,7 +430,7 @@ inline bool DefReadFromCacheImage(void*& theReadPtr, Image** theImage)
 {
     int aLen;
     SMemR(theReadPtr, &aLen, sizeof(int));  // 读取贴图标签字符数组的长度
-    char* aImageName = (char*)_alloca(aLen + 1);  // 在栈上分配贴图标签字符数组的内存空间
+    char* aImageName = (char*)alloca(aLen + 1);  // 在栈上分配贴图标签字符数组的内存空间
     SMemR(theReadPtr, aImageName, aLen);  // 读取贴图标签字符数组
     aImageName[aLen] = '\0';
 
@@ -442,7 +443,7 @@ inline bool DefReadFromCacheFont(void*& theReadPtr, _Font** theFont)
 {
     int aLen;
     SMemR(theReadPtr, &aLen, sizeof(int));  // 读取字体标签字符数组的长度
-    char* aFontName = (char*)_alloca(aLen + 1);  // 在栈上分配字体标签字符数组的内存空间
+    char* aFontName = (char*)alloca(aLen + 1);  // 在栈上分配字体标签字符数组的内存空间
     SMemR(theReadPtr, aFontName, aLen);  // 读取字体标签字符数组
     aFontName[aLen] = '\0';
     
@@ -649,6 +650,22 @@ bool DefinitionIsCompiled(const SexyString& theXMLFilePath)
     if (IsFileInPakFile(aCompiledFilePath))
         return true;
 
+    struct stat attr;
+
+    if (stat(aCompiledFilePath.c_str(), &attr) != 0);
+        return false;
+    time_t aCompiledFileTime = attr.st_mtime;
+
+    if (stat(theXMLFilePath.c_str(), &attr) != 0);
+    {
+        TodTrace(_S("Can't file source file to compile '%s'"), theXMLFilePath.c_str());
+        return false;
+    }
+    time_t aXMLFileTime = attr.st_mtime;
+
+    return aXMLFileTime < aCompiledFileTime;
+
+    /*
     _WIN32_FILE_ATTRIBUTE_DATA lpFileData;
     _FILETIME aCompiledFileTime;
     bool aSucceed = GetFileAttributesEx(aCompiledFilePath.c_str(), _GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &lpFileData);
@@ -662,6 +679,7 @@ bool DefinitionIsCompiled(const SexyString& theXMLFilePath)
     }
     else
         return aSucceed && CompareFileTime(&aCompiledFileTime, &lpFileData.ftLastWriteTime) == 1;
+    */
 }
 
 void DefinitionFillWithDefaults(DefMap* theDefMap, void* theDefinition)
@@ -719,7 +737,7 @@ bool DefSymbolValueFromString(DefSymbol* theSymbolMap, const char* theName, int*
 {
     while (theSymbolMap->mSymbolName != nullptr)
     {
-        if (stricmp(theName, theSymbolMap->mSymbolName) == 0)
+        if (strcasecmp(theName, theSymbolMap->mSymbolName) == 0)
         {
             *theResultValue = theSymbolMap->mSymbolValue;
             return true;
@@ -1113,7 +1131,7 @@ bool DefinitionReadField(XMLParser* theXmlParser, DefMap* theDefMap, void* theDe
         if (aField->mFieldType == DefFieldType::DT_FLAGS && DefinitionReadFlagField(theXmlParser, aXMLElement.mValue, (uint*)pVar, (DefSymbol*)aField->mExtraData))
             return true;
         
-        if (stricmp(aXMLElement.mValue.c_str(), aField->mFieldName) == 0)  // 判断 aXMLElement 定义的是否为该成员变量
+        if (strcasecmp(aXMLElement.mValue.c_str(), aField->mFieldName) == 0)  // 判断 aXMLElement 定义的是否为该成员变量
         {
             bool aSuccess;
             switch (aField->mFieldType)

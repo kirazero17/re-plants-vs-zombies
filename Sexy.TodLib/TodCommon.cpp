@@ -1133,7 +1133,7 @@ bool TodLoadNextResource()
 //0x513330
 bool TodResourceManager::TodLoadNextResource()
 {
-	GetTickCount();
+	//GetTickCount();
 	TodHesitationTrace("preres");
 
 	while (mCurResGroupListItr != mCurResGroupList->end())
@@ -1194,7 +1194,7 @@ bool TodResourceManager::TodLoadNextResource()
 			}
 		}
 
-		GetTickCount();
+		//GetTickCount();
 		TodHesitationTrace("Loading: '%s'", aRes->mPath.c_str());
 		TodHesitationTrace("resource '%s'", aRes->mPath.c_str());
 		return true;
@@ -1326,7 +1326,7 @@ int TodVsnprintf(char* theBuffer, int theSize, const char* theFormat, va_list th
 {
 	try
 	{
-		int aCount = _vsnprintf(theBuffer, theSize, theFormat, theArgList);
+		int aCount = vsnprintf(theBuffer, theSize, theFormat, theArgList);
 		if (aCount == -1)
 		{
 			theBuffer[theSize - 1] = '\0';

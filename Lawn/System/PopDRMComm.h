@@ -22,6 +22,7 @@ public:
 	};
 
 public:
+#ifdef _ENABLE_DRM_FOR_DEBUGGING
 	HWND					mDrmGameWnd;								//+00
 	HWND					mHWnd;										//+0x4
 	HANDLE					mUNKNOWN__FileMapping;						//+08 unknown
@@ -33,7 +34,8 @@ public:
 	DWORD					mCurrentThreadID;							//+0x20
 	UINT					mWindowMessage[PopCapDRM_NumMessages];		//+0x24
 	CRITICAL_SECTION		mCritSect;									//+0x48
-	
+#endif
+
 public:
 	PopDRMComm();  //0x5D5AC0
 	~PopDRMComm();  //0x5D5B60

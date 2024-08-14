@@ -1,4 +1,5 @@
 #include <time.h>
+#include <SDL.h>
 #include "ZenGarden.h"
 #include "BoardInclude.h"
 #include "System/Music.h"
@@ -122,7 +123,7 @@ Board::Board(LawnApp* theApp)
 	mIntervalDrawTime = 0;
 	mIntervalDrawCountStart = 0;
 	mPreloadTime = 0;
-	mGameID = _time64(nullptr);
+	mGameID = time(0);
 	mMinFPS = 1000.0f;
 	mGravesCleared = 0;
 	mPlantsEaten = 0;
@@ -363,7 +364,7 @@ void Board::SaveGame(const std::string& theFileName)
 // GOTY @Patoke: 0x40B739
 void Board::ResetFPSStats()
 {
-	DWORD aTickCount = GetTickCount();
+	int64_t aTickCount = SDL_GetTicks64();
 	mStartDrawTime = aTickCount;
 	mIntervalDrawTime = aTickCount;
 	mDrawCount = 1;
@@ -7751,9 +7752,9 @@ void Board::Draw(Graphics* g)
 
 	if (mDrawCount && mCutScene->mPreloaded)
 	{
-		int aTickCount = GetTickCount();
-		int aIntervalDraws = mDrawCount - mIntervalDrawCountStart;
-		int aInterval = aTickCount - mIntervalDrawTime;
+		int64_t aTickCount = SDL_GetTicks64();
+		int64_t aIntervalDraws = mDrawCount - mIntervalDrawCountStart;
+		int64_t aInterval = aTickCount - mIntervalDrawTime;
 		if (aInterval > 10000)
 		{
 			float aIntervalFPS = (aIntervalDraws * 1000 + 500) / aInterval;
