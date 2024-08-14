@@ -120,10 +120,8 @@ void SexyApp::ReadFromRegistry()
 		mTimesExecuted = 0;
 
 		char aFileName[256];
-		GetWindowsDirectory(aFileName, 256);
-		if (aFileName[strlen(aFileName)-1] != '/')
-			strcat(aFileName, "/");
-		strcat(aFileName, "popcinfo.dat");
+		getcwd(aFileName, sizeof(aFileName));
+		strcat(aFileName, "/savedata/popcinfo.dat");
 
 		FILE* fp = fopen(aFileName, "rb");
 		if (fp != NULL)
@@ -231,10 +229,8 @@ void SexyApp::WriteToRegistry()
 	if (!mPlayingDemoBuffer)
 	{
 		char aFileName[256];
-		GetWindowsDirectory(aFileName, 256);
-		if (aFileName[strlen(aFileName)-1] != '/')
-			strcat(aFileName, "/");
-		strcat(aFileName, "popcinfo.dat");
+		getcwd(aFileName, sizeof(aFileName));
+		strcat(aFileName, "/savedata/popcinfo.dat");
 
 		FILE* fp = fopen(aFileName, "r+b");
 		if (fp != NULL)
