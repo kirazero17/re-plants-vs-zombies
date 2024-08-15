@@ -2,8 +2,9 @@
 
 Fork of Patoke's PVZ GOTY decompilation with the following objectives:
 - [x] Replace renderer with SDL + OpenGL
-- [ ] Replace Windows code with cross-platform code
-- [ ] Replace DirectSound/BASS/FMod with SDL mixer (Partial, music still uses BASS)
+- [x] Replace Windows code with cross-platform code
+- [x] Make a native port to Linux
+- [ ] Replace DirectSound/BASS/FMod with SDL mixer (Sounds done, music still uses BASS)
 - [ ] (Maybe) Port the game to videogame consoles, starting with the Switch
 
 Original README continues below
