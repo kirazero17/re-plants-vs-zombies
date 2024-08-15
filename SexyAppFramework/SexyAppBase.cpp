@@ -19,7 +19,7 @@
 #include "graphics/GLInterface.h"
 #include "graphics/GLImage.h"
 #include "graphics/MemoryImage.h"
-#include "misc/HTTPTransfer.h"
+//#include "misc/HTTPTransfer.h"
 #include "widget/Dialog.h"
 #include "imagelib/ImageLib.h"
 #include "sound/SDLSoundManager.h"

@@ -32,9 +32,13 @@ typedef std::map<std::string, PakRecord> PakRecordMap;
 class PakCollection
 {
 public:
-	HANDLE					mFileHandle;
-	HANDLE					mMappingHandle;
-	void*					mDataPtr;				//+0x8：资源包中的所有数据
+	//HANDLE					mFileHandle;
+	//HANDLE					mMappingHandle;
+	void*						mDataPtr;				//+0x8：资源包中的所有数据
+
+	explicit PakCollection(size_t size) { mDataPtr = malloc(size); }
+
+	~PakCollection() { free(mDataPtr); }
 };
 
 typedef std::list<PakCollection> PakCollectionList;

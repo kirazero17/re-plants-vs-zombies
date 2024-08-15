@@ -1,6 +1,6 @@
 // simple Windows Registry emulator
 
-#include "regemu.h"
+#include "RegEmu.h"
 
 #include <map>
 #include <cstdio>
@@ -131,7 +131,7 @@ void regemu::SetRegFile(const std::string& fileName)
 	}
 
 	fclose(f);
-	printf("RegEmu: Loaded from '%s': %d total key(s)\n", currFile.c_str(), registry.size());
+	printf("RegEmu: Loaded from '%s': %ld total key(s)\n", currFile.c_str(), registry.size());
 }
 
 bool regemu::RegistryRead(const std::string& keyName, const std::string& valueName, uint32_t* type, uint8_t* value, uint32_t* length)

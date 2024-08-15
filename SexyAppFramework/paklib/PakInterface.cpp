@@ -1,6 +1,5 @@
-#define NOMINMAX 1
-#include <windows.h>
-#include <direct.h>
+#include <unistd.h>
+#include "Common.h"
 #include "PakInterface.h"
 
 typedef unsigned char uchar;
@@ -36,6 +35,7 @@ PakInterface::~PakInterface()
 
 bool PakInterface::AddPakFile(const std::string& theFileName)
 {
+	/*
 	HANDLE aFileHandle = CreateFile(theFileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 
 	if (aFileHandle == INVALID_HANDLE_VALUE)
@@ -57,14 +57,35 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 		CloseHandle(aFileHandle);
 		return false;
 	}
+	*/
 
-	mPakCollectionList.push_back(PakCollection());
+	FILE *aFileHandle = fopen(theFileName.c_str(), "rb");
+    if (!aFileHandle) return false;
+
+    fseek(aFileHandle, 0, SEEK_END);
+    size_t aFileSize = ftell(aFileHandle);
+    fseek(aFileHandle, 0, SEEK_SET);
+
+	mPakCollectionList.emplace_back(aFileSize);
 	PakCollection* aPakCollection = &mPakCollectionList.back();
-
+	/*
 	aPakCollection->mFileHandle = aFileHandle;
 	aPakCollection->mMappingHandle = aFileMapping;
 	aPakCollection->mDataPtr = aPtr;
-	
+	*/
+
+	if (fread(aPakCollection->mDataPtr, 1, aFileSize, aFileHandle) != aFileSize) {
+        fclose(aFileHandle);
+        return false;
+    }
+    fclose(aFileHandle);
+
+    {
+        auto *aDataPtr = static_cast<uint8_t *>(aPakCollection->mDataPtr);
+        for (size_t i = 0; i < aFileSize; i++)
+            *aDataPtr++ ^= 0xF7;
+    }
+
 	PakRecordMap::iterator aRecordItr = mPakRecordMap.insert(PakRecordMap::value_type(StringToUpper(theFileName), PakRecord())).first;
 	PakRecord* aPakRecord = &(aRecordItr->second);
 	aPakRecord->mCollection = aPakCollection;
@@ -152,7 +173,7 @@ static void FixFileName(const char* theFileName, char* theUpperName)
 		aDir[aLen] = 0;
 
 		// 判断 theFileName 文件是否位于当前目录下
-		if (strnicmp(aDir, theFileName, aLen) == 0)
+		if (strncasecmp(aDir, theFileName, aLen) == 0)
 			theFileName += aLen;  // 若是，则跳过从盘符到当前目录的部分，转化为相对路径
 	}
 
@@ -193,7 +214,7 @@ static void FixFileName(const char* theFileName, char* theUpperName)
 //0x5D85C0
 PFILE* PakInterface::FOpen(const char* theFileName, const char* anAccess)
 {
-	if ((stricmp(anAccess, "r") == 0) || (stricmp(anAccess, "rb") == 0) || (stricmp(anAccess, "rt") == 0))
+	if ((strcasecmp(anAccess, "r") == 0) || (strcasecmp(anAccess, "rb") == 0) || (strcasecmp(anAccess, "rt") == 0))
 	{
 		char anUpperName[256];
 		FixFileName(theFileName, anUpperName);

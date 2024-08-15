@@ -336,10 +336,10 @@ bool ResourceManager::ParseImageResource(XMLElement &theElement)
 	{
 		const SexyChar *aType = anItr->second.c_str();
 
-		if (sexystricmp(aType,_S("none"))==0) anAnimType = AnimType_None;
-		else if (sexystricmp(aType,_S("once"))==0) anAnimType = AnimType_Once;
-		else if (sexystricmp(aType,_S("loop"))==0) anAnimType = AnimType_Loop;
-		else if (sexystricmp(aType,_S("pingpong"))==0) anAnimType = AnimType_PingPong;
+		if (strcasecmp(aType,_S("none"))==0) anAnimType = AnimType_None;
+		else if (strcasecmp(aType,_S("once"))==0) anAnimType = AnimType_Once;
+		else if (strcasecmp(aType,_S("loop"))==0) anAnimType = AnimType_Loop;
+		else if (strcasecmp(aType,_S("pingpong"))==0) anAnimType = AnimType_PingPong;
 		else 
 		{
 			Fail("Invalid animation type.");

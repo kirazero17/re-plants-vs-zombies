@@ -1,7 +1,7 @@
 #include "HTTPTransfer.h"
 #include "SexyAppBase.h"
-#include <process.h>
-#include <winsock.h>
+#include <sys/socket.h>
+#include <time.h>
 
 using namespace Sexy;
 
@@ -20,8 +20,11 @@ HTTPTransfer::~HTTPTransfer()
 {
 	Abort();
 	while (mThreadRunning)
-	{		
-		Sleep(20);
+	{
+		timespec ts;
+		ts.tv_sec = 20 / 1000;
+		ts.tv_nsec = (20 % 1000) * 1000000;
+		nanosleep(&ts, &ts);
 	}
 }
 
@@ -90,13 +93,13 @@ bool HTTPTransfer::SocketWait(bool checkRead, bool checkWrite)
 		// Check every 100ms
 		int aReadTime = 100;
 
-		TIMEVAL aTimeout;
+		timeval aTimeout;
 		aTimeout.tv_sec = aReadTime/1000;
 		aTimeout.tv_usec = (aReadTime%1000)*1000;
 
 		int aVal = select(FD_SETSIZE, &aReadSet, &aWriteSet, &anExceptSet, &aTimeout);
 		
-		if (aVal == SOCKET_ERROR)
+		if (aVal == 0)
 		{
 			Fail(RESULT_SOCKET_ERROR);
 			return false;
