@@ -112,7 +112,7 @@ static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, in
 				*dst++ = ((aPixel>>16)&0xF000) | ((aPixel>>12)&0x0F00) | ((aPixel>>8)&0x00F0) | ((aPixel>>4)&0x000F);
 			}
 
-			if (rightPad) 
+			if (rightPad)
 				*dst = *(dst-1);
 
 			srcRow += theImage->GetWidth();
@@ -123,7 +123,7 @@ static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, in
 	{
 		uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
 		uint16_t *dstRow = aDest;
-		uint16_t *palette = (uint16_t*)theImage->mColorTable;
+		uint32_t *palette = (uint32_t*)theImage->mColorTable;
 
 		for(int y=0; y<theHeight; y++)
 		{
@@ -135,7 +135,7 @@ static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, in
 				*dst++ = ((aPixel>>16)&0xF000) | ((aPixel>>12)&0x0F00) | ((aPixel>>8)&0x00F0) | ((aPixel>>4)&0x000F);
 			}
 
-			if (rightPad) 
+			if (rightPad)
 				*dst = *(dst-1);
 
 			srcRow += theImage->GetWidth();
@@ -176,7 +176,7 @@ static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int
 				*dst++ = ((aPixel>>8)&0xF800) | ((aPixel>>5)&0x07E0) | ((aPixel>>3)&0x001F);
 			}
 
-			if (rightPad) 
+			if (rightPad)
 				*dst = *(dst-1);
 
 			srcRow += theImage->GetWidth();
@@ -199,7 +199,7 @@ static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int
 				*dst++ = ((aPixel>>8)&0xF800) | ((aPixel>>5)&0x07E0) | ((aPixel>>3)&0x001F);
 			}
 
-			if (rightPad) 
+			if (rightPad)
 				*dst = *(dst-1);
 
 			srcRow += theImage->GetWidth();
@@ -230,7 +230,7 @@ static void CopyImageToTexturePalette8(MemoryImage *theImage, int offx, int offy
 
 	uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
 	uint32_t *dstRow = aDest;
-	uint32_t *palette = (uint32_t*)theImage->mColorTable;
+	uint16_t *palette = (uint16_t*)theImage->mColorTable;
 
 	for(int y=0; y<theHeight; y++)
 	{
@@ -317,7 +317,7 @@ static bool IsPowerOf2(int theNum)
 }
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static void GetBestTextureDimensions(int &theWidth, int &theHeight, bool isEdge, bool usePow2, long unsigned int theImageFlags)
+static void GetBestTextureDimensions(int &theWidth, int &theHeight, bool isEdge, bool usePow2, uint32_t theImageFlags)
 {
 //	theImageFlags = D3DImageFlag_MinimizeNumSubdivisions;
 	if (theImageFlags & D3DImageFlag_Use64By64Subdivisions)
@@ -694,7 +694,7 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 	srcY = srcTop;
 	dstY = theY;
 
-	long unsigned int aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
+	uint32_t aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
 
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
@@ -960,7 +960,7 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 	srcY = srcTop;
 	dstY = starty;
 
-	long unsigned int aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
+	uint32_t aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
 
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;

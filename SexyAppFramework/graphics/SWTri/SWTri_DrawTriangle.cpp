@@ -3,19 +3,19 @@
 #pragma warning(disable:4101)
 
 #if (TRI0==0)
-	#define PTYPE unsigned long
+	#define PTYPE uint32_t
 	#define PIXEL_INCLUDE "SWTri_Pixel8888.cpp"
 	#define NAME0 8888
 #elif (TRI0==1)
-	#define PTYPE unsigned long
+	#define PTYPE uint32_t
 	#define PIXEL_INCLUDE "SWTri_Pixel888.cpp"
 	#define NAME0 0888
 #elif (TRI0==2)
-	#define PTYPE unsigned short
+	#define PTYPE uint16_t
 	#define PIXEL_INCLUDE "SWTri_Pixel565.cpp"
 	#define NAME0 0565
 #elif (TRI0==3)
-	#define PTYPE unsigned short
+	#define PTYPE uint16_t
 	#define PIXEL_INCLUDE "SWTri_Pixel555.cpp"
 	#define NAME0 0555
 #endif
