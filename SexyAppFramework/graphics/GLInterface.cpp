@@ -123,7 +123,7 @@ static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, in
 	{
 		uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
 		uint16_t *dstRow = aDest;
-		uint32_t *palette = (uint32_t*)theImage->mColorTable;
+		uint16_t *palette = (uint16_t*)theImage->mColorTable;
 
 		for(int y=0; y<theHeight; y++)
 		{
