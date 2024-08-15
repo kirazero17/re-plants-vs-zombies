@@ -4,7 +4,7 @@
 #define POLYNOMIAL 0x04c11db7L
 
 static bool 	     bCrcTableGenerated = false;
-static unsigned long crc_table[256];
+static uint32_t crc_table[256];
 
 using namespace Sexy;
 //using namespace std;
@@ -34,10 +34,10 @@ static void GenerateCRCTable(void)
 	bCrcTableGenerated = true;
 
 	int i, j;
-	unsigned long crc_accum;
+	uint32_t crc_accum;
 	for (i = 0;  i < 256;  i++)
 	{
-		crc_accum = ((unsigned long) i << 24);
+		crc_accum = ((uint32_t) i << 24);
 		for ( j = 0;  j < 8;  j++ )
 		{
 			if (crc_accum & 0x80000000L)
@@ -52,7 +52,7 @@ static void GenerateCRCTable(void)
 //----------------------------------------------------------------------------
 // Update the CRC on the data block one byte at a time.
 //----------------------------------------------------------------------------
-static unsigned long UpdateCRC(unsigned long crc_accum,
+static uint32_t UpdateCRC(uint32_t crc_accum,
 						const char *data_blk_ptr,
 						int data_blk_size)
 {
@@ -321,7 +321,7 @@ void Buffer::WriteShort(short theShort)
 	WriteByte((uchar)(theShort >> 8));
 }
 
-void Buffer::WriteLong(long theLong)
+void Buffer::WriteLong(int32_t theLong)
 {
 	WriteByte((uchar)theLong);
 	WriteByte((uchar)(theLong >> 8));
@@ -467,12 +467,12 @@ short Buffer::ReadShort() const
 	return aShort;	
 }
 
-long Buffer::ReadLong() const
+int32_t Buffer::ReadLong() const
 {
-	long aLong = ReadByte();
-	aLong |= ((long) ReadByte()) << 8;
-	aLong |= ((long) ReadByte()) << 16;
-	aLong |= ((long) ReadByte()) << 24;
+	int32_t aLong = ReadByte();
+	aLong |= ((int32_t) ReadByte()) << 8;
+	aLong |= ((int32_t) ReadByte()) << 16;
+	aLong |= ((int32_t) ReadByte()) << 24;
 
 	return aLong;
 }
@@ -543,7 +543,7 @@ void Buffer::ReadBuffer(ByteVector* theByteVector) const
 {
 	theByteVector->clear();
 	
-	ulong aLength = ReadLong();
+	uint32_t aLength = ReadLong();
 	theByteVector->resize(aLength);
 	ReadBytes(&(*theByteVector)[0], aLength);
 }
@@ -565,9 +565,9 @@ int Buffer::GetDataLenBits() const
 	return mDataBitSize;
 }
 
-ulong Buffer::GetCRC32(ulong theSeed) const
+uint32_t Buffer::GetCRC32(uint32_t theSeed) const
 {	
-	ulong aCRC = theSeed;
+	uint32_t aCRC = theSeed;
 	aCRC = UpdateCRC(aCRC, (const char*) &mData[0], (int) mData.size());	
 	return aCRC;
 }

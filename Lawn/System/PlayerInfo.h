@@ -45,8 +45,8 @@ class PlayerInfo
 {
 public:
     SexyString          mName;                              //+0x0
-    ulong               mUseSeq;                            //+0x1C
-    ulong               mId;                                //+0x20
+    uint32_t            mUseSeq;                            //+0x1C
+    uint32_t            mId;                                //+0x20
     int                 mLevel;                             //+0x24
     int                 mCoins;                             //+0x28
     int                 mFinishedAdventure;                 //+0x2C
