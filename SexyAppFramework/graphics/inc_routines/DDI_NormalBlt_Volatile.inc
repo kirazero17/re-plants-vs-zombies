@@ -16,13 +16,13 @@
 		SRC_TYPE* aSrcPixelsRow = aSrcBits + 
 			(theSrcRect.mY * theImage->mWidth) + theSrcRect.mX;				
 
-		ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-		ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-		ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+		uint32_t aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+		uint32_t aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+		uint32_t aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-		ulong aRRoundAdd = aRMask >> 1;
-		ulong aGRoundAdd = aGMask >> 1;
-		ulong aBRoundAdd = aBMask >> 1;
+		uint32_t aRRoundAdd = aRMask >> 1;
+		uint32_t aGRoundAdd = aGMask >> 1;
+		uint32_t aBRoundAdd = aBMask >> 1;
 
 #ifdef OPTIMIZE_SOFTWARE_DRAWING
 		bool performNormalBlit = true;
@@ -38,8 +38,8 @@
 
 					for (int x = 0; x < theSrcRect.mWidth; x++)
 					{
-						ulong src = NEXT_SRC_COLOR;
-						ulong dest = *aDestPixels;
+						uint32_t src = NEXT_SRC_COLOR;
+						uint32_t dest = *aDestPixels;
 
 						int a = src >> 27;
 						//int oma = 256 - a;
@@ -68,8 +68,8 @@
 
 					for (int x = 0; x < theSrcRect.mWidth; x++)
 					{
-						ulong src = NEXT_SRC_COLOR;
-						ulong dest = *aDestPixels;
+						uint32_t src = NEXT_SRC_COLOR;
+						uint32_t dest = *aDestPixels;
 
 						int a = src >> 27;
 						//int oma = 256 - a;
@@ -100,8 +100,8 @@
 
 				for (int x = 0; x < theSrcRect.mWidth; x++)
 				{
-					ulong src = NEXT_SRC_COLOR;
-					ulong dest = *aDestPixels;
+					uint32_t src = NEXT_SRC_COLOR;
+					uint32_t dest = *aDestPixels;
 
 					int a = src >> 24;
 					int oma = 256 - a;
@@ -119,35 +119,35 @@
 	}
 	else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 	{
-		ulong* aDestPixelsRow = ((ulong*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/4) + theX;		
+		uint32_t* aDestPixelsRow = ((uint32_t*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/4) + theX;		
 		SRC_TYPE* aSrcPixelsRow = aSrcBits + 
 			(theSrcRect.mY * theImage->mWidth) + theSrcRect.mX;				
 
-		ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-		ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-		ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+		uint32_t aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+		uint32_t aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+		uint32_t aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-		ulong aRRoundAdd = aRMask >> 1;
-		ulong aGRoundAdd = aGMask >> 1;
-		ulong aBRoundAdd = aBMask >> 1;
+		uint32_t aRRoundAdd = aRMask >> 1;
+		uint32_t aGRoundAdd = aGMask >> 1;
+		uint32_t aBRoundAdd = aBMask >> 1;
 
 #ifdef OPTIMIZE_SOFTWARE_DRAWING
 		if (gOptimizeSoftwareDrawing)
 		{
 			for (int y = 0; y < theSrcRect.mHeight; y++)
 			{
-				ulong* aDestPixels = aDestPixelsRow;
+				uint32_t* aDestPixels = aDestPixelsRow;
 				SRC_TYPE* aSrcPixels = aSrcPixelsRow;					
 
 				for (int x = 0; x < theSrcRect.mWidth; x++)
 				{
-					ulong src = NEXT_SRC_COLOR;
-					ulong dest = *aDestPixels;
+					uint32_t src = NEXT_SRC_COLOR;
+					uint32_t dest = *aDestPixels;
 
 					int a = src >> 24;
 					//int oma = 256 - a;
-					ulong srctmp = src & 0xFF00FF;
-					ulong desttmp = dest & 0xFF00FF;
+					uint32_t srctmp = src & 0xFF00FF;
+					uint32_t desttmp = dest & 0xFF00FF;
 					desttmp = (desttmp + (((srctmp - desttmp) * a) >> 8)) & 0xFF00FF;
 					src &= 0x00FF00;
 					dest &= 0x00FF00;
@@ -168,13 +168,13 @@
 		{
 			for (int y = 0; y < theSrcRect.mHeight; y++)
 			{
-				ulong* aDestPixels = aDestPixelsRow;
+				uint32_t* aDestPixels = aDestPixelsRow;
 				SRC_TYPE* aSrcPixels = aSrcPixelsRow;					
 
 				for (int x = 0; x < theSrcRect.mWidth; x++)
 				{
-					ulong src = NEXT_SRC_COLOR;
-					ulong dest = *aDestPixels;
+					uint32_t src = NEXT_SRC_COLOR;
+					uint32_t dest = *aDestPixels;
 
 					int a = src >> 24;
 					int oma = 256 - a;

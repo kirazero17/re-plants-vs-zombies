@@ -16,9 +16,9 @@
 
 		uchar* aRLAdditiveDataRow = aSrcRLAdditiveData + (theSrcRect.mY * theImage->mWidth) + theSrcRect.mX;
 
-		ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-		ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-		ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+		uint32_t aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+		uint32_t aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+		uint32_t aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 		
 		// unused
 		//int aMaxR = (1<<mDDInterface->mRedBits) - 1;
@@ -44,7 +44,7 @@
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32_t src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAdditiveData;
 
 					if (rl > aSpanLeft)
@@ -60,7 +60,7 @@
 						for (int i = 0; i < rl; i++)
 						{
 							src = NEXT_SRC_COLOR;
-							ulong dest = *aDestPixels;					
+							uint32_t dest = *aDestPixels;					
 							
 							int r = aMaxRedTable[((dest & aRMask) + (src & aRMask)) >> aRedShift];
 							int g = aMaxGreenTable[((dest & aGMask) + (src & aGMask)) >> aGreenShift];
@@ -98,7 +98,7 @@
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32_t src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAdditiveData;
 
 					if (rl > aSpanLeft)
@@ -114,7 +114,7 @@
 						for (int i = 0; i < rl; i++)
 						{
 							src = NEXT_SRC_COLOR;
-							ulong dest = *aDestPixels;					
+							uint32_t dest = *aDestPixels;					
 							
 							int r = aMaxRedTable[((dest & aRMask) >> aRedShift) + ((((src & aRMask) >> aRedShift) * cr) >> 8)];
 							int g = aMaxGreenTable[((dest & aGMask) >> aGreenShift) + ((((src & aGMask) >> aGreenShift) * cg) >> 8)];
@@ -139,12 +139,12 @@
 	}
 	else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 	{
-		ulong* aDestPixelsRow = ((ulong*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/4) + theX;		
+		uint32_t* aDestPixelsRow = ((uint32_t*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/4) + theX;		
 		uchar* aRLAdditiveDataRow = aSrcRLAdditiveData + (theSrcRect.mY * theImage->mWidth) + theSrcRect.mX;
 
-		ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-		ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-		ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+		uint32_t aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+		uint32_t aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+		uint32_t aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 		
 		// unused
 		// int aMaxR = (1<<mDDInterface->mRedBits) - 1;
@@ -163,14 +163,14 @@
 		{
 			for (int y = 0; y < theSrcRect.mHeight; y++)
 			{
-				ulong* aDestPixels = aDestPixelsRow;				
+				uint32_t* aDestPixels = aDestPixelsRow;				
 				uchar* aRLAdditiveData = aRLAdditiveDataRow;
 				
 				aSrcPixels = aSrcPixelsRow;
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32_t src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAdditiveData;
 
 					if (rl > aSpanLeft)
@@ -186,7 +186,7 @@
 						for (int i = 0; i < rl; i++)
 						{
 							src = NEXT_SRC_COLOR;
-							ulong dest = *aDestPixels;					
+							uint32_t dest = *aDestPixels;					
 							
 							int r = aMaxRedTable[((dest & aRMask) + (src & aRMask)) >> aRedShift];
 							int g = aMaxGreenTable[((dest & aGMask) + (src & aGMask)) >> aGreenShift];
@@ -217,14 +217,14 @@
 
 			for (int y = 0; y < theSrcRect.mHeight; y++)
 			{
-				ulong* aDestPixels = aDestPixelsRow;				
+				uint32_t* aDestPixels = aDestPixelsRow;				
 				uchar* aRLAdditiveData = aRLAdditiveDataRow;
 				
 				aSrcPixels = aSrcPixelsRow;
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32_t src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAdditiveData;
 
 					if (rl > aSpanLeft)
@@ -240,7 +240,7 @@
 						for (int i = 0; i < rl; i++)
 						{
 							src = NEXT_SRC_COLOR;
-							ulong dest = *aDestPixels;					
+							uint32_t dest = *aDestPixels;					
 							
 							int r = aMaxRedTable[((dest & aRMask) >> aRedShift) + ((((src & aRMask) >> aRedShift) * cr) >> 8)];
 							int g = aMaxGreenTable[((dest & aGMask) >> aGreenShift) + ((((src & aGMask) >> aGreenShift) * cg) >> 8)];
