@@ -571,7 +571,7 @@ bool SexyAppBase::ReadDemoBuffer(std::string &theError)
 	struct AutoFile { FILE *f; AutoFile(FILE *file) : f(file) {} ~AutoFile() { fclose(f); } };
 	AutoFile aCloseFile(aFP);
 
-	ulong aFileID;
+	uint32_t aFileID;
 	fread(&aFileID, 4, 1, aFP);
 
 	DBG_ASSERTE(aFileID == DEMO_FILE_ID);
@@ -582,7 +582,7 @@ bool SexyAppBase::ReadDemoBuffer(std::string &theError)
 	}
 
 
-	ulong aVersion;
+	uint32_t aVersion;
 	fread(&aVersion, 4, 1, aFP);
 	
 	fread(&mRandSeed, 4, 1, aFP);
@@ -679,10 +679,10 @@ void SexyAppBase::WriteDemoBuffer()
 
 		if (aFP != NULL)
 		{
-			ulong aFileID = DEMO_FILE_ID;
+			uint32_t aFileID = DEMO_FILE_ID;
 			fwrite(&aFileID, 4, 1, aFP);		
 
-			ulong aVersion = DEMO_VERSION;
+			uint32_t aVersion = DEMO_VERSION;
 			fwrite(&aVersion, 4, 1, aFP);
 			
 			fwrite(&mRandSeed, 4, 1, aFP);
@@ -702,7 +702,7 @@ void SexyAppBase::WriteDemoBuffer()
 			fwrite(&aMarkerBufferSize, 4, 1, aFP);
 			fwrite(aMarkerBuffer.GetDataPtr(), aMarkerBufferSize, 1, aFP);
 
-			ulong aDemoLength = mUpdateCount;
+			uint32_t aDemoLength = mUpdateCount;
 			fwrite(&aDemoLength, 4, 1, aFP);
 
 			fwrite(mDemoBuffer.GetDataPtr(), 1, mDemoBuffer.GetDataLen(), aFP);
@@ -724,7 +724,7 @@ void SexyAppBase::DemoSyncBuffer(Buffer* theBuffer)
 		DBG_ASSERTE(!mDemoIsShortCmd);
 		DBG_ASSERTE(mDemoCmdNum == DEMO_SYNC);
 
-		ulong aLen = mDemoBuffer.ReadLong();
+		uint32_t aLen = mDemoBuffer.ReadLong();
 		
 		theBuffer->Clear();
 		for (int i = 0; i < (int) aLen; i++)
@@ -1456,9 +1456,9 @@ void SexyAppBase::DumpProgramInfo()
 
 		MemoryImage aCopiedImage(*aMemoryImage);
 
-		ulong* aBits = aCopiedImage.GetBits();
+		uint32_t* aBits = aCopiedImage.GetBits();
 
-		ulong* aThumbBitsPtr = anImageLibImage.mBits;
+		uint32_t* aThumbBitsPtr = anImageLibImage.mBits;
 
 		for (int aThumbY = 0; aThumbY < aThumbHeight; aThumbY++)
 			for (int aThumbX = 0; aThumbX < aThumbWidth; aThumbX++)
@@ -1517,7 +1517,7 @@ double SexyAppBase::GetLoadingThreadProgress()
 	return std::min(mCompletedLoadingThreadTasks / (double) mNumLoadingThreadTasks, 1.0);
 }
 
-bool SexyAppBase::RegistryWrite(const std::string& theValueName, ulong theType, const uchar* theValue, ulong theLength)
+bool SexyAppBase::RegistryWrite(const std::string& theValueName, uint32_t theType, const uchar* theValue, uint32_t theLength)
 {
 	if (mRegKey.length() == 0)
 		return false;
@@ -1556,7 +1556,7 @@ bool SexyAppBase::RegistryWrite(const std::string& theValueName, ulong theType, 
 	int aResult = RegOpenKeyExA(HKEY_CURRENT_USER, aKeyName.c_str(), 0, KEY_WRITE, &aGameKey);
 	if (aResult != ERROR_SUCCESS)
 	{
-		ulong aDisp;
+		uint32_t aDisp;
 		aResult = RegCreateKeyExA(HKEY_CURRENT_USER, aKeyName.c_str(), 0, (char *)"Key", REG_OPTION_NON_VOLATILE,
 			KEY_ALL_ACCESS, NULL, &aGameKey, &aDisp);
 	}
@@ -1618,7 +1618,7 @@ bool SexyAppBase::RegistryWriteBoolean(const std::string& theValueName, bool the
 	return RegistryWrite(theValueName, regemu::REGEMU_DWORD, (uchar*) &aValue, sizeof(int));
 }
 
-bool SexyAppBase::RegistryWriteData(const std::string& theValueName, const uchar* theValue, ulong theLength)
+bool SexyAppBase::RegistryWriteData(const std::string& theValueName, const uchar* theValue, uint32_t theLength)
 {
 	return RegistryWrite(theValueName, regemu::REGEMU_BINARY, (uchar*) theValue, theLength);
 }
@@ -1801,12 +1801,12 @@ bool SexyAppBase::RegistryGetSubKeys(const std::string& theKeyName, StringVector
 }
 */
 
-bool SexyAppBase::RegistryRead(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength)
+bool SexyAppBase::RegistryRead(const std::string& theValueName, uint32_t* theType, uchar* theValue, uint32_t* theLength)
 {
 	return RegistryReadKey(theValueName, theType, theValue, theLength);
 }
 
-bool SexyAppBase::RegistryReadKey(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength)
+bool SexyAppBase::RegistryReadKey(const std::string& theValueName, uint32_t* theType, uchar* theValue, uint32_t* theLength)
 {
 	if (mRegKey.length() == 0)
 		return false;
@@ -1828,7 +1828,7 @@ bool SexyAppBase::RegistryReadKey(const std::string& theValueName, ulong* theTyp
 
 		*theType = mDemoBuffer.ReadLong();
 
-		ulong aLen = mDemoBuffer.ReadLong();
+		uint32_t aLen = mDemoBuffer.ReadLong();
 		*theLength = aLen;
 		
 		if (*theLength >= aLen)
@@ -1918,8 +1918,8 @@ bool SexyAppBase::RegistryReadString(const std::string& theKey, std::string* the
 {
 	char aStr[1024];
 	
-	ulong aType;	
-	ulong aLen = sizeof(aStr) - 1;
+	uint32_t aType;	
+	uint32_t aLen = sizeof(aStr) - 1;
 	if (!RegistryRead(theKey, &aType, (uchar*) aStr, &aLen))
 		return false;
 
@@ -1934,9 +1934,9 @@ bool SexyAppBase::RegistryReadString(const std::string& theKey, std::string* the
 
 bool SexyAppBase::RegistryReadInteger(const std::string& theKey, int* theValue)
 {
-	ulong aType;
-	ulong aLong;
-	ulong aLen = 4;
+	uint32_t aType;
+	uint32_t aLong;
+	uint32_t aLen = 4;
 	if (!RegistryRead(theKey, &aType, (uchar*) &aLong, &aLen))
 		return false;
 
@@ -1957,9 +1957,9 @@ bool SexyAppBase::RegistryReadBoolean(const std::string& theKey, bool* theValue)
 	return true;
 }
 
-bool SexyAppBase::RegistryReadData(const std::string& theKey, uchar* theValue, ulong* theLength)
+bool SexyAppBase::RegistryReadData(const std::string& theKey, uchar* theValue, uint32_t* theLength)
 {		
-	ulong aType;
+	uint32_t aType;
 	if (!RegistryRead(theKey, &aType, (uchar*) theValue, theLength))
 		return false;
 
@@ -2096,7 +2096,7 @@ bool SexyAppBase::ReadBufferFromFile(const std::string& theFileName, Buffer* the
 		if (!success)
 			return false;
 
-		ulong aLen = mDemoBuffer.ReadLong();		
+		uint32_t aLen = mDemoBuffer.ReadLong();		
 				
 		theBuffer->Clear();
 		for (int i = 0; i < (int) aLen; i++)
@@ -2762,7 +2762,7 @@ bool SexyAppBase::DrawDirtyStuff()
 #ifdef _DEBUG
 		/*if (mFPSTime >= 5000) // Show FPS about every 5 seconds
 		{
-			ulong aTickNow = GetTickCount();
+			uint32_t aTickNow = GetTickCount();
 
 			OutputDebugString(StrFormat(_S("Theoretical FPS: %d\r\n"), (int) (mFPSCount * 1000 / mFPSTime)).c_str());
 			OutputDebugString(StrFormat(_S("Actual      FPS: %d\r\n"), (mFPSFlipCount * 1000) / max((aTickNow - mFPSStartTick), 1)).c_str());
@@ -3041,9 +3041,9 @@ static INT_PTR CALLBACK MarkerListDialogProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 static LPWORD lpdwAlign ( LPWORD lpIn)
 {
-    ULONG ul;
+    uint32_t ul;
 
-    ul = (ULONG)(intptr_t)lpIn;
+    ul = (uint32_t)(intptr_t)lpIn;
     ul +=3;
     ul >>=2;
     ul <<=2;
@@ -5040,9 +5040,9 @@ bool SexyAppBase::Process(bool allowSleep)
 	// Make sure we're not paused
 	if ((!mPaused) && (mUpdateMultiplier > 0))
 	{
-		ulong aStartTime = SDL_GetTicks();
+		uint32_t aStartTime = SDL_GetTicks();
 		
-		// ulong aCurTime = aStartTime; // Unused
+		// uint32_t aCurTime = aStartTime; // Unused
 		int aCumSleepTime = 0;
 		
 		// When we are VSynching, only calculate this FTimeAcc right after drawing
@@ -5189,7 +5189,7 @@ bool SexyAppBase::Process(bool allowSleep)
 			// This is to make sure that the title screen doesn't take up any more than 
 			// 1/3 of the processor time
 
-			ulong anEndTime = SDL_GetTicks();
+			uint32_t anEndTime = SDL_GetTicks();
 			int anElapsedTime = (anEndTime - aStartTime) - aCumSleepTime;
 			int aLoadingYieldSleepTime = std::min(250, (anElapsedTime * 2) - aCumSleepTime);
 
@@ -6175,25 +6175,25 @@ Sexy::GLImage* SexyAppBase::CreateCrossfadeImage(Sexy::Image* theImage1, const R
 	GLImage* anImage = new GLImage(mGLInterface);
 	anImage->Create(aWidth, aHeight);
 
-	ulong* aDestBits = anImage->GetBits();
-	ulong* aSrcBits1 = aMemoryImage1->GetBits();
-	ulong* aSrcBits2 = aMemoryImage2->GetBits();
+	uint32_t* aDestBits = anImage->GetBits();
+	uint32_t* aSrcBits1 = aMemoryImage1->GetBits();
+	uint32_t* aSrcBits2 = aMemoryImage2->GetBits();
 
 	int aSrc1Width = aMemoryImage1->GetWidth();
 	int aSrc2Width = aMemoryImage2->GetWidth();
-	ulong aMult = (int) (theFadeFactor*256);
-	ulong aOMM = (256 - aMult);
+	uint32_t aMult = (int) (theFadeFactor*256);
+	uint32_t aOMM = (256 - aMult);
 
 	for (int y = 0; y < aHeight; y++)
 	{
-		ulong* s1 = &aSrcBits1[(y+theRect1.mY)*aSrc1Width+theRect1.mX];
-		ulong* s2 = &aSrcBits2[(y+theRect2.mY)*aSrc2Width+theRect2.mX];
-		ulong* d = &aDestBits[y*aWidth];
+		uint32_t* s1 = &aSrcBits1[(y+theRect1.mY)*aSrc1Width+theRect1.mX];
+		uint32_t* s2 = &aSrcBits2[(y+theRect2.mY)*aSrc2Width+theRect2.mX];
+		uint32_t* d = &aDestBits[y*aWidth];
 
 		for (int x = 0; x < aWidth; x++)
 		{
-			ulong p1 = *s1++;
-			ulong p2 = *s2++;
+			uint32_t p1 = *s1++;
+			uint32_t p2 = *s2++;
 
 			//p1 = 0;
 			//p2 = 0xFFFFFFFF;
@@ -6218,7 +6218,7 @@ void SexyAppBase::ColorizeImage(Image* theImage, const Color& theColor)
 	if (aSrcMemoryImage == NULL)
 		return;
 
-	ulong* aBits;	
+	uint32_t* aBits;	
 	int aNumColors;
 
 	if (aSrcMemoryImage->mColorTable == NULL)
@@ -6237,7 +6237,7 @@ void SexyAppBase::ColorizeImage(Image* theImage, const Color& theColor)
 	{
 		for (int i = 0; i < aNumColors; i++)
 		{
-			ulong aColor = aBits[i];
+			uint32_t aColor = aBits[i];
 
 			aBits[i] = 
 				((((aColor & 0xFF000000) >> 8) * theColor.mAlpha) & 0xFF000000) |
@@ -6250,7 +6250,7 @@ void SexyAppBase::ColorizeImage(Image* theImage, const Color& theColor)
 	{
 		for (int i = 0; i < aNumColors; i++)
 		{
-			ulong aColor = aBits[i];
+			uint32_t aColor = aBits[i];
 
 			int aAlpha = ((aColor >> 24) * theColor.mAlpha) / 255;
 			int aRed = (((aColor >> 16) & 0xFF) * theColor.mRed) / 255;
@@ -6284,8 +6284,8 @@ GLImage* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColo
 	
 	anImage->Create(theImage->GetWidth(), theImage->GetHeight());
 	
-	ulong* aSrcBits;
-	ulong* aDestBits;
+	uint32_t* aSrcBits;
+	uint32_t* aDestBits;
 	int aNumColors;
 
 	if (aSrcMemoryImage->mColorTable == NULL)
@@ -6297,7 +6297,7 @@ GLImage* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColo
 	else
 	{
 		aSrcBits = aSrcMemoryImage->mColorTable;
-		aDestBits = anImage->mColorTable = new ulong[256];
+		aDestBits = anImage->mColorTable = new uint32_t[256];
 		aNumColors = 256;
 		
 		anImage->mColorIndices = new uchar[anImage->mWidth*theImage->mHeight];
@@ -6309,7 +6309,7 @@ GLImage* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColo
 	{
 		for (int i = 0; i < aNumColors; i++)
 		{
-			ulong aColor = aSrcBits[i];
+			uint32_t aColor = aSrcBits[i];
 
 			aDestBits[i] = 
 				((((aColor & 0xFF000000) >> 8) * theColor.mAlpha) & 0xFF000000) |
@@ -6322,7 +6322,7 @@ GLImage* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColo
 	{
 		for (int i = 0; i < aNumColors; i++)
 		{
-			ulong aColor = aSrcBits[i];
+			uint32_t aColor = aSrcBits[i];
 
 			int aAlpha = ((aColor >> 24) * theColor.mAlpha) / 255;
 			int aRed = (((aColor >> 16) & 0xFF) * theColor.mRed) / 255;
@@ -6370,17 +6370,17 @@ void SexyAppBase::MirrorImage(Image* theImage)
 {
 	MemoryImage* aSrcMemoryImage = dynamic_cast<MemoryImage*>(theImage);	
 
-	ulong* aSrcBits = aSrcMemoryImage->GetBits();
+	uint32_t* aSrcBits = aSrcMemoryImage->GetBits();
 
 	int aPhysSrcWidth = aSrcMemoryImage->mWidth;
 	for (int y = 0; y < aSrcMemoryImage->mHeight; y++)
 	{
-		ulong* aLeftBits = aSrcBits + (y * aPhysSrcWidth);		
-		ulong* aRightBits = aLeftBits + (aPhysSrcWidth - 1);
+		uint32_t* aLeftBits = aSrcBits + (y * aPhysSrcWidth);		
+		uint32_t* aRightBits = aLeftBits + (aPhysSrcWidth - 1);
 
 		for (int x = 0; x < (aPhysSrcWidth >> 1); x++)
 		{
-			ulong aSwap = *aLeftBits;
+			uint32_t aSwap = *aLeftBits;
 
 			*(aLeftBits++) = *aRightBits;
 			*(aRightBits--) = aSwap;
@@ -6394,18 +6394,18 @@ void SexyAppBase::FlipImage(Image* theImage)
 {
 	MemoryImage* aSrcMemoryImage = dynamic_cast<MemoryImage*>(theImage);
 
-	ulong* aSrcBits = aSrcMemoryImage->GetBits();
+	uint32_t* aSrcBits = aSrcMemoryImage->GetBits();
 
 	int aPhysSrcHeight = aSrcMemoryImage->mHeight;
 	int aPhysSrcWidth = aSrcMemoryImage->mWidth;
 	for (int x = 0; x < aPhysSrcWidth; x++)
 	{
-		ulong* aTopBits    = aSrcBits + x;
-		ulong* aBottomBits = aTopBits + (aPhysSrcWidth * (aPhysSrcHeight - 1));
+		uint32_t* aTopBits    = aSrcBits + x;
+		uint32_t* aBottomBits = aTopBits + (aPhysSrcWidth * (aPhysSrcHeight - 1));
 
 		for (int y = 0; y < (aPhysSrcHeight >> 1); y++)
 		{
-			ulong aSwap = *aTopBits;
+			uint32_t aSwap = *aTopBits;
 
 			*aTopBits = *aBottomBits;
 			aTopBits += aPhysSrcWidth;
@@ -6423,10 +6423,10 @@ void SexyAppBase::RotateImageHue(Sexy::MemoryImage *theImage, int theDelta)
 		theDelta += 256;
 
 	int aSize = theImage->mWidth * theImage->mHeight;
-	ulong *aPtr = theImage->GetBits();
+	uint32_t *aPtr = theImage->GetBits();
 	for (int i=0; i<aSize; i++)
 	{
-		ulong aPixel = *aPtr;
+		uint32_t aPixel = *aPtr;
 		int alpha = aPixel&0xff000000;
 		int r = (aPixel>>16)&0xff;
 		int g = (aPixel>>8) &0xff;
@@ -6489,7 +6489,7 @@ void SexyAppBase::RotateImageHue(Sexy::MemoryImage *theImage, int theDelta)
 	theImage->BitsChanged();
 }
 
-ulong SexyAppBase::HSLToRGB(int h, int s, int l)
+uint32_t SexyAppBase::HSLToRGB(int h, int s, int l)
 {
 	int r;
 	int g;
@@ -6523,7 +6523,7 @@ ulong SexyAppBase::HSLToRGB(int h, int s, int l)
 	return 0xFF000000 | (r << 16) | (g << 8) | (b);
 }
 
-ulong SexyAppBase::RGBToHSL(int r, int g, int b)
+uint32_t SexyAppBase::RGBToHSL(int r, int g, int b)
 {					
 	int maxval = std::max(r, std::max(g, b));
 	int minval = std::min(r, std::min(g, b));
@@ -6549,20 +6549,20 @@ ulong SexyAppBase::RGBToHSL(int r, int g, int b)
 	return 0xFF000000 | (hue) | (saturation << 8) | (luminosity << 16);	 
 }
 
-void SexyAppBase::HSLToRGB(const ulong* theSource, ulong* theDest, int theSize)
+void SexyAppBase::HSLToRGB(const uint32_t* theSource, uint32_t* theDest, int theSize)
 {
 	for (int i = 0; i < theSize; i++)
 	{
-		ulong src = theSource[i];
+		uint32_t src = theSource[i];
 		theDest[i] = (src & 0xFF000000) | (HSLToRGB((src & 0xFF), (src >> 8) & 0xFF, (src >> 16) & 0xFF) & 0x00FFFFFF);
 	}
 }
 
-void SexyAppBase::RGBToHSL(const ulong* theSource, ulong* theDest, int theSize)
+void SexyAppBase::RGBToHSL(const uint32_t* theSource, uint32_t* theDest, int theSize)
 {
 	for (int i = 0; i < theSize; i++)
 	{
-		ulong src = theSource[i];
+		uint32_t src = theSource[i];
 		theDest[i] = (src & 0xFF000000) | (RGBToHSL(((src >> 16) & 0xFF), (src >> 8) & 0xFF, (src & 0xFF)) & 0x00FFFFFF);
 	}
 }

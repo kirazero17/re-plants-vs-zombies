@@ -11,7 +11,7 @@ class Image
 public:
 	int						mWidth;
 	int						mHeight;
-	unsigned long*			mBits;
+	uint32_t*				mBits;
 
 public:
 	Image();
@@ -19,7 +19,7 @@ public:
 
 	int						GetWidth();
 	int						GetHeight();
-	unsigned long*			GetBits();
+	uint32_t*				GetBits();
 };
 
 bool WriteJPEGImage(const std::string& theFileName, Image* theImage);

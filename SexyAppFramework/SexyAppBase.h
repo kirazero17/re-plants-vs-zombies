@@ -135,7 +135,7 @@ public:
 	SDL_Window*				mSDLWindow;
 	SDL_GLContext*			mSDLGLContext;
 
-	ulong					mRandSeed;
+	uint32_t					mRandSeed;
 		
 	std::string				mCompanyName;
 	std::string				mFullCompanyName;
@@ -253,7 +253,7 @@ public:
 	bool					mIsDisabled;
 	bool					mHasFocus;
 	int						mDrawTime;
-	ulong					mFPSStartTick;
+	uint32_t					mFPSStartTick;
 	int						mFPSFlipCount;
 	int						mFPSDirtyCount;
 	int						mFPSTime;
@@ -375,9 +375,9 @@ protected:
 	void					ShowMemoryUsage();			
 
 	// Registry helpers
-	bool					RegistryRead(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength);
-	bool					RegistryReadKey(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength);
-	bool					RegistryWrite(const std::string& theValueName, ulong theType, const uchar* theValue, ulong theLength);
+	bool					RegistryRead(const std::string& theValueName, uint32_t* theType, uchar* theValue, uint32_t* theLength);
+	bool					RegistryReadKey(const std::string& theValueName, uint32_t* theType, uchar* theValue, uint32_t* theLength);
+	bool					RegistryWrite(const std::string& theValueName, uint32_t theType, const uchar* theValue, uint32_t theLength);
 
 	// Demo recording helpers	
 	void					ProcessDemo();
@@ -469,10 +469,10 @@ public:
 	void					MirrorImage(Image* theImage);
 	void					FlipImage(Image* theImage);
 	void					RotateImageHue(Sexy::MemoryImage *theImage, int theDelta);
-	ulong					HSLToRGB(int h, int s, int l);
-	ulong					RGBToHSL(int r, int g, int b);
-	void					HSLToRGB(const ulong* theSource, ulong* theDest, int theSize);
-	void					RGBToHSL(const ulong* theSource, ulong* theDest, int theSize);
+	uint32_t					HSLToRGB(int h, int s, int l);
+	uint32_t					RGBToHSL(int r, int g, int b);
+	void					HSLToRGB(const uint32_t* theSource, uint32_t* theDest, int theSize);
+	void					RGBToHSL(const uint32_t* theSource, uint32_t* theDest, int theSize);
 
 	void					AddMemoryImage(MemoryImage* theMemoryImage);
 	void					RemoveMemoryImage(MemoryImage* theMemoryImage);
@@ -559,11 +559,11 @@ public:
 	bool					RegistryReadString(const std::string& theValueName, std::string* theString);
 	bool					RegistryReadInteger(const std::string& theValueName, int* theValue);
 	bool					RegistryReadBoolean(const std::string& theValueName, bool* theValue);
-	bool					RegistryReadData(const std::string& theValueName, uchar* theValue, ulong* theLength);
+	bool					RegistryReadData(const std::string& theValueName, uchar* theValue, uint32_t* theLength);
 	bool					RegistryWriteString(const std::string& theValueName, const std::string& theString);
 	bool					RegistryWriteInteger(const std::string& theValueName, int theValue);
 	bool					RegistryWriteBoolean(const std::string& theValueName, bool theValue);
-	bool					RegistryWriteData(const std::string& theValueName, const uchar* theValue, ulong theLength);	
+	bool					RegistryWriteData(const std::string& theValueName, const uchar* theValue, uint32_t theLength);	
 	bool					RegistryEraseKey(const SexyString& theKeyName);
 	void					RegistryEraseValue(const SexyString& theValueName);
 
