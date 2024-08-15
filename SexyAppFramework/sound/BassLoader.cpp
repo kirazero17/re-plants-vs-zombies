@@ -8,15 +8,38 @@ static long gBassLoadCount = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _WIN32
+static const char* libName = "bass.dll";
+#else
+static const char* libName = "./libbass.so";
+#endif
+
 static void CheckBassFunction(unsigned int theFunc, const char *theName)
 {
 	if (theFunc==0)
 	{
-		char aBuf[1024];
-		sprintf(aBuf,"%s function not found in bass.dll",theName);
-		MessageBoxA(NULL,aBuf,"Error",MB_OK | MB_ICONERROR);
-		exit(0);
+		printf("%s function not found in %s", theName, libName);
+		exit(1);
 	}
+}
+
+static LibModule LibOpen(const char *fileName)
+{
+#ifdef _WIN32
+	return LoadLibrary(fileName);
+#else
+	return dlopen(fileName, RTLD_LAZY);
+#endif
+}
+
+static void LibClose(LibModule handle)
+{
+#ifdef _WIN32
+	FreeLibrary(handle);
+#else
+	dlclose(handle);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,11 +47,15 @@ static void CheckBassFunction(unsigned int theFunc, const char *theName)
 BASS_INSTANCE::BASS_INSTANCE(const char *dllName)
 {
 	// TODO: Linux dlopen(), dlclose(), dlsym()
-    mModule = LoadLibrary(dllName);
+    mModule = LibOpen(dllName);
 	if (!mModule)
 		return;
 
+#ifdef _WIN32
 #define GETPROC(_x) CheckBassFunction(*((uintptr_t *)&_x) = (uintptr_t)GetProcAddress(mModule, #_x),#_x)    
+#else
+#define GETPROC(_x) CheckBassFunction(*((uintptr_t *)&_x) = (uintptr_t)dlsym(mModule, #_x), #_x)
+#endif
 
 	GETPROC(BASS_Init);
 	GETPROC(BASS_Free);
@@ -36,13 +63,16 @@ BASS_INSTANCE::BASS_INSTANCE(const char *dllName)
 	GETPROC(BASS_Start);
 	
 	//*((uintptr_t*) &BASS_SetGlobalVolumes) = (uintptr_t) GetProcAddress(mModule, "BASS_SetGlobalVolumes");
-	*((uintptr_t*) &BASS_SetVolume) = (uintptr_t) GetProcAddress(mModule, "BASS_SetVolume");
+	//*((uintptr_t*) &BASS_SetVolume) = (uintptr_t) GetProcAddress(mModule, "BASS_SetVolume");
+	GETPROC(BASS_SetVolume);
 
-	if (BASS_SetVolume == NULL /*&& (BASS_SetGlobalVolumes == NULL)*/)
+	/*
+	if (BASS_SetVolume == NULL)
 	{
 		MessageBoxA(NULL,"Whoops! You forgot to put the CD in your computer.","Error",MB_OK | MB_ICONERROR);
 		exit(0);
 	}
+	*/
 
 	//*((uintptr_t*) &BASS_SetConfig) = (uintptr_t) GetProcAddress(mModule, "BASS_SetConfig");
 	//*((uintptr_t*) &BASS_GetConfig) = (uintptr_t) GetProcAddress(mModule, "BASS_GetConfig");
@@ -133,7 +163,7 @@ BASS_INSTANCE::BASS_INSTANCE(const char *dllName)
 BASS_INSTANCE::~BASS_INSTANCE()
 {
     if (mModule)
-        FreeLibrary(mModule);
+        LibClose(mModule);
 }
 
 
@@ -179,15 +209,15 @@ BOOL BASS_INSTANCE::BASS_StreamPlay(HSTREAM handle, BOOL flush, DWORD flags)
 ///////////////////////////////////////////////////////////////////////////////
 void Sexy::LoadBassDLL()
 {
-	InterlockedIncrement(&gBassLoadCount);
+	//InterlockedIncrement(&gBassLoadCount);
 	if (gBass!=NULL)
 		return;
 
-	gBass = new BASS_INSTANCE("bass.dll");
+	gBass = new BASS_INSTANCE(libName);
 	if (gBass->mModule==NULL)
 	{
-		MessageBoxA(NULL,"Can't find bass.dll." ,"Error",MB_OK | MB_ICONERROR);
-		exit(0);
+		printf("Can't find %s.\n", libName);
+		exit(1);
 	}
 }
 
@@ -197,7 +227,7 @@ void Sexy::FreeBassDLL()
 {
 	if (gBass!=NULL)
 	{
-		if (InterlockedDecrement(&gBassLoadCount) <= 0)
+		//if (InterlockedDecrement(&gBassLoadCount) <= 0)
 		{
 			delete gBass;
 			gBass = NULL;

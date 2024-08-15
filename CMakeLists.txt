@@ -40,9 +40,9 @@ target_include_directories(re-plants-vs-zombies PRIVATE ${PROJECT_SOURCE_DIR}/Se
 target_compile_definitions(re-plants-vs-zombies PRIVATE _DEBUG)
 
 target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer mpg123 opusfile opus ogg ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
-target_link_options(re-plants-vs-zombies PRIVATE -static -static-libgcc -static-libstdc++)
 
 if (WIN32)
+	target_link_options(re-plants-vs-zombies PRIVATE -static -static-libgcc -static-libstdc++)
 	target_link_libraries(re-plants-vs-zombies opengl32 ws2_32 ddraw dinput8 dxguid dxerr8 user32 gdi32 winmm imm32 shlwapi)
 	target_compile_definitions(re-plants-vs-zombies PRIVATE WINDOWS)
 

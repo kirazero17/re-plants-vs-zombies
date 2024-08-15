@@ -179,7 +179,7 @@ void EditWidget::UpdateCaretPos()
 	if (aPoint.mY<10) aPoint.mY = 10;
 	else if (aPoint.mY>anApp->mHeight-10) aPoint.mY = anApp->mHeight-10;
 
-	SetCaretPos(aPoint.mX,aPoint.mY);
+	//SetCaretPos(aPoint.mX,aPoint.mY);
 }
 
 void EditWidget::GotFocus()

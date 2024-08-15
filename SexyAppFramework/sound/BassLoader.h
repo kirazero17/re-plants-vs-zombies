@@ -7,6 +7,7 @@
 #include <windows.h>
 typedef HMODULE LibModule;
 #else
+#include <dlfcn.h>
 typedef void* LibModule;
 #endif
 
@@ -37,7 +38,7 @@ struct BASS_INSTANCE
 
 	DWORD(WINAPI *BASS_GetVersion)();
 
-	BOOL(WINAPI *BASS_Init)(int device, DWORD freq, DWORD flags, HWND win, GUID* clsid);
+	BOOL(WINAPI *BASS_Init)(int device, DWORD freq, DWORD flags, void* win, void* clsid);
 //	BOOL(WINAPI *BASS_Init2)(int device, DWORD freq, DWORD flags, HWND win, GUID* clsid);
 	void(WINAPI *BASS_Free)();
 	BOOL(WINAPI *BASS_Stop)();
