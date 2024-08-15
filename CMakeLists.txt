@@ -12,6 +12,7 @@ file(GLOB SOURCES
 	SexyAppFramework/sound/*.cpp
 	SexyAppFramework/widget/*.cpp
 	#SexyAppFramework/ogg/*.c
+	SexyAppFramework/fcaseopen/*.c
 	Sexy.TodLib/*.cpp
 	Lawn/*.cpp
 	Lawn/Widget/*.cpp

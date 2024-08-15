@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include "Common.h"
 #include "PakInterface.h"
+#include "fcaseopen/fcaseopen.h"
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;
@@ -59,7 +60,7 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 	}
 	*/
 
-	FILE *aFileHandle = fopen(theFileName.c_str(), "rb");
+	FILE *aFileHandle = fcaseopen(theFileName.c_str(), "rb");
     if (!aFileHandle) return false;
 
     fseek(aFileHandle, 0, SEEK_END);
@@ -230,7 +231,7 @@ PFILE* PakInterface::FOpen(const char* theFileName, const char* anAccess)
 		}
 	}
 
-	FILE* aFP = fopen(theFileName, anAccess);
+	FILE* aFP = fcaseopen(theFileName, anAccess);
 	if (aFP == NULL)
 		return NULL;
 	PFILE* aPFP = new PFILE;
