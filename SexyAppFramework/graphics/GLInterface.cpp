@@ -41,12 +41,12 @@ static void CopyImageToTexture8888(MemoryImage *theImage, int offx, int offy, in
 
 	if (theImage->mColorTable == NULL)
 	{
-		long unsigned int *srcRow = theImage->GetBits() + offy * theImage->GetWidth() + offx;
+		uint32_t *srcRow = (uint32_t*)theImage->GetBits() + offy * theImage->GetWidth() + offx;
 		uint32_t *dstRow = aDest;
 
 		for(int y=0; y<theHeight; y++)
 		{
-			long unsigned int *src = srcRow;
+			uint32_t *src = srcRow;
 			uint32_t *dst = dstRow;
 			for(int x=0; x<theWidth; x++)
 				*dst++ = *src++;
@@ -62,7 +62,7 @@ static void CopyImageToTexture8888(MemoryImage *theImage, int offx, int offy, in
 	{
 		uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
 		uint32_t *dstRow = aDest;
-		long unsigned int *palette = theImage->mColorTable;
+		uint32_t *palette = (uint32_t*)theImage->mColorTable;
 
 		for(int y=0; y<theHeight; y++)
 		{
@@ -99,16 +99,16 @@ static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, in
 
 	if (theImage->mColorTable == NULL)
 	{
-		long unsigned int *srcRow = theImage->GetBits() + offy * theImage->GetWidth() + offx;
+		uint32_t *srcRow = (uint32_t*)theImage->GetBits() + offy * theImage->GetWidth() + offx;
 		uint16_t *dstRow = aDest;
 
 		for(int y=0; y<theHeight; y++)
 		{
-			long unsigned int *src = srcRow;
+			uint32_t *src = srcRow;
 			uint16_t *dst = dstRow;
 			for(int x=0; x<theWidth; x++)
 			{
-				long unsigned int aPixel = *src++;
+				uint32_t aPixel = *src++;
 				*dst++ = ((aPixel>>16)&0xF000) | ((aPixel>>12)&0x0F00) | ((aPixel>>8)&0x00F0) | ((aPixel>>4)&0x000F);
 			}
 
@@ -123,7 +123,7 @@ static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, in
 	{
 		uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
 		uint16_t *dstRow = aDest;
-		long unsigned int *palette = theImage->mColorTable;
+		uint32_t *palette = (uint32_t*)theImage->mColorTable;
 
 		for(int y=0; y<theHeight; y++)
 		{
@@ -131,7 +131,7 @@ static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, in
 			uint16_t *dst = dstRow;
 			for(int x=0; x<theWidth; x++)
 			{
-				long unsigned int aPixel = palette[*src++];
+				uint32_t aPixel = palette[*src++];
 				*dst++ = ((aPixel>>16)&0xF000) | ((aPixel>>12)&0x0F00) | ((aPixel>>8)&0x00F0) | ((aPixel>>4)&0x000F);
 			}
 
@@ -163,16 +163,16 @@ static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int
 
 	if (theImage->mColorTable == NULL)
 	{
-		long unsigned int *srcRow = theImage->GetBits() + offy * theImage->GetWidth() + offx;
+		uint32_t *srcRow = (uint32_t*)theImage->GetBits() + offy * theImage->GetWidth() + offx;
 		uint16_t *dstRow = aDest;
 
 		for(int y=0; y<theHeight; y++)
 		{
-			long unsigned int *src = srcRow;
+			uint32_t *src = srcRow;
 			uint16_t *dst = dstRow;
 			for(int x=0; x<theWidth; x++)
 			{
-				long unsigned int aPixel = *src++;
+				uint32_t aPixel = *src++;
 				*dst++ = ((aPixel>>8)&0xF800) | ((aPixel>>5)&0x07E0) | ((aPixel>>3)&0x001F);
 			}
 
@@ -187,7 +187,7 @@ static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int
 	{
 		uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
 		uint16_t *dstRow = aDest;
-		long unsigned int *palette = theImage->mColorTable;
+		uint32_t *palette = (uint32_t*)theImage->mColorTable;
 
 		for(int y=0; y<theHeight; y++)
 		{
@@ -195,7 +195,7 @@ static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int
 			uint16_t *dst = dstRow;
 			for(int x=0; x<theWidth; x++)
 			{
-				long unsigned int aPixel = palette[*src++];
+				uint32_t aPixel = palette[*src++];
 				*dst++ = ((aPixel>>8)&0xF800) | ((aPixel>>5)&0x07E0) | ((aPixel>>3)&0x001F);
 			}
 
@@ -230,7 +230,7 @@ static void CopyImageToTexturePalette8(MemoryImage *theImage, int offx, int offy
 
 	uint8_t *srcRow = (uint8_t*)theImage->mColorIndices + offy * theImage->GetWidth() + offx;
 	uint32_t *dstRow = aDest;
-	long unsigned int *palette = theImage->mColorTable;
+	uint32_t *palette = (uint32_t*)theImage->mColorTable;
 
 	for(int y=0; y<theHeight; y++)
 	{
@@ -238,7 +238,7 @@ static void CopyImageToTexturePalette8(MemoryImage *theImage, int offx, int offy
 		uint32_t *dst = dstRow;
 		for(int x=0; x<theWidth; x++)
 		{
-			long unsigned int aPixel = palette[*src++];
+			uint32_t aPixel = palette[*src++];
 			*dst++ = (aPixel&0xFF00FF00) | ((aPixel>>16)&0xFF) | ((aPixel<<16)&0xFF0000);
 		}
 
