@@ -44,7 +44,6 @@
 #include "misc/ResourceManager.h"
 
 #include "widget/Checkbox.h"
-#include "sound/BassMusicInterface.h"
 #include "widget/Dialog.h"
 #include "SexyAppFramework/resource.h"
 

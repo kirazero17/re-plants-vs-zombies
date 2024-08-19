@@ -5,8 +5,7 @@
 #include "paklib/PakInterface.h"
 #include "../../Sexy.TodLib/TodDebug.h"
 #include "../../Sexy.TodLib/TodCommon.h"
-#include "sound/BassLoader.h"
-#include "sound/BassMusicInterface.h"
+#include "sound/SDLMusicInterface.h"
 
 using namespace Sexy;
 
@@ -38,28 +37,34 @@ MusicFileData gMusicFileData[MusicFile::NUM_MUSIC_FILES];  //0x6A9ED0
 //0x45A2C0
 bool Music::TodLoadMusic(MusicFile theMusicFile, const std::string& theFileName)
 {
-	HMUSIC aHMusic = 0;
-	HSTREAM aStream = 0;
-	BassMusicInterface* aBass = (BassMusicInterface*)mApp->mMusicInterface;
+	Mix_Music* aHMusic = 0;
+	SDLMusicInterface* anSDL = (SDLMusicInterface*)mApp->mMusicInterface;
 	std::string anExt;
 
 	size_t aDot = theFileName.rfind('.');
 	if (aDot != std::string::npos)  // 文件名中不含“.”（文件无扩展名）
 		anExt = StringToLower(theFileName.substr(aDot + 1));  // 取得小写的文件扩展名
 
+	PFILE* pFile = p_fopen(theFileName.c_str(), "rb");
+	if (pFile == nullptr)
+		return false;
+
+	p_fseek(pFile, 0, SEEK_END);  // 指针调整至文件末尾
+	int aSize = p_ftell(pFile);  // 当前位置即为文件长度
+	p_fseek(pFile, 0, SEEK_SET);  // 指针调回文件开头
+	void* aData = operator new[](aSize);
+	p_fread(aData, sizeof(char), aSize, pFile);  // 按字节读取数据
+	p_fclose(pFile);  // 关闭文件流
+
+	aHMusic = Mix_LoadMUS_RW(SDL_RWFromMem(aData, aSize), 1);
+	delete[] (char *)aData;
+
+	if (aHMusic == 0)
+		return false;
+
+	/*
 	if (anExt.compare("wav") && anExt.compare("ogg") && anExt.compare("mp3"))  // 如果不是这三种拓展名
 	{
-		PFILE* pFile = p_fopen(theFileName.c_str(), "rb");
-		if (pFile == nullptr)
-			return false;
-
-		p_fseek(pFile, 0, SEEK_END);  // 指针调整至文件末尾
-		int aSize = p_ftell(pFile);  // 当前位置即为文件长度
-		p_fseek(pFile, 0, SEEK_SET);  // 指针调回文件开头
-		void* aData = operator new[](aSize);
-		p_fread(aData, sizeof(char), aSize, pFile);  // 按字节读取数据
-		p_fclose(pFile);  // 关闭文件流
-
 		aHMusic = gBass->BASS_MusicLoad(true, aData, 0, aSize, aBass->mMusicLoadFlags, 0);
 		delete[] (char *)aData;
 
@@ -68,17 +73,6 @@ bool Music::TodLoadMusic(MusicFile theMusicFile, const std::string& theFileName)
 	}
 	else
 	{
-		PFILE* pFile = p_fopen(theFileName.c_str(), "rb");
-		if (pFile == nullptr)
-			return false;
-
-		p_fseek(pFile, 0, SEEK_END);  // 指针调整至文件末尾
-		int aSize = p_ftell(pFile);  // 当前位置即为文件长度
-		p_fseek(pFile, 0, SEEK_SET);  // 指针调回文件开头
-		void* aData = operator new[](aSize);
-		p_fread(aData, sizeof(char), aSize, pFile);  // 按字节读取数据
-		p_fclose(pFile);  // 关闭文件流
-		
 		aStream = gBass->BASS_StreamCreateFile(true, aData, 0, aSize, 0);
 		TOD_ASSERT(gMusicFileData[theMusicFile].mFileData == nullptr);
 		gMusicFileData[theMusicFile].mFileData = (unsigned int*)aData;
@@ -86,11 +80,11 @@ bool Music::TodLoadMusic(MusicFile theMusicFile, const std::string& theFileName)
 		if (aStream == 0)
 			return false;
 	}
+	*/
 	
-	BassMusicInfo aMusicInfo;
-	aMusicInfo.mHStream = aStream;
+	SDLMusicInfo aMusicInfo;
 	aMusicInfo.mHMusic = aHMusic;
-	aBass->mMusicMap.insert(BassMusicMap::value_type(theMusicFile, aMusicInfo));  // 将目标音乐文件编号和音乐信息的对组加入音乐数据容器
+	anSDL->mMusicMap.insert(SDLMusicMap::value_type(theMusicFile, aMusicInfo));  // 将目标音乐文件编号和音乐信息的对组加入音乐数据容器
 	return true;
 }
 
@@ -140,7 +134,7 @@ void Music::SetupMusicFileForTune(MusicFile theMusicFile, MusicTune theMusicTune
 		break;
 	}
 
-	HMUSIC aHMusic = GetBassMusicHandle(theMusicFile);
+	Mix_Music* aHMusic = GetMusicHandle(theMusicFile);
 	for (int aTrack = 0; aTrack < aTrackCount; aTrack++)
 	{
 		float aVolume;
@@ -151,7 +145,8 @@ void Music::SetupMusicFileForTune(MusicFile theMusicFile, MusicTune theMusicTune
 		else
 			aVolume = 0;
 
-		gBass->BASS_ChannelSetAttribute(aHMusic, BASS_ATTRIB_MUSIC_VOL_CHAN + aTrack, aVolume);  // 设置音乐每条轨道的音量属性（静音与否）
+		Mix_ModMusicStreamSetChannelVolume(aHMusic, aTrack, (int)(aVolume*128));
+		//gBass->BASS_ChannelSetAttribute(aHMusic, BASS_ATTRIB_MUSIC_VOL_CHAN + aTrack, aVolume);  // 设置音乐每条轨道的音量属性（静音与否）
 	}
 }
 
@@ -165,7 +160,7 @@ void Music::LoadSong(MusicFile theMusicFile, const std::string& theFileName)
 	}
 	else
 	{
-		gBass->BASS_ChannelSetAttribute(GetBassMusicHandle(theMusicFile), BASS_ATTRIB_MUSIC_PSCALER, 4);  // 设置音乐定位精确度属性
+		//gBass->BASS_ChannelSetAttribute(GetBassMusicHandle(theMusicFile), BASS_ATTRIB_MUSIC_PSCALER, 4);  // 设置音乐定位精确度属性
 		TodHesitationTrace("song '%s'", theFileName.c_str());
 	}
 }
@@ -201,8 +196,8 @@ void Music::MusicInit()
 void Music::MusicCreditScreenInit()
 {
 #ifndef _DEBUG
-	BassMusicInterface* aBass = (BassMusicInterface*)mApp->mMusicInterface;
-	if (aBass->mMusicMap.find((int)MusicFile::MUSIC_FILE_CREDITS_ZOMBIES_ON_YOUR_LAWN) == aBass->mMusicMap.end())  // 如果尚未加载
+	SDLMusicInterface* anSDL = (SDLMusicInterface*)mApp->mMusicInterface;
+	if (anSDL->mMusicMap.find((int)MusicFile::MUSIC_FILE_CREDITS_ZOMBIES_ON_YOUR_LAWN) == anSDL->mMusicMap.end())  // 如果尚未加载
 		LoadSong(MusicFile::MUSIC_FILE_MAIN_MUSIC, "sounds/ZombiesOnYourLawn.ogg");
 #endif
 }
@@ -234,29 +229,40 @@ void Music::StopAllMusic()
 }
 
 //0x45AC20
-HMUSIC Music::GetBassMusicHandle(MusicFile theMusicFile)
+Mix_Music* Music::GetMusicHandle(MusicFile theMusicFile)
 {
-	BassMusicInterface* aBass = (BassMusicInterface*)mApp->mMusicInterface;
-	auto anItr = aBass->mMusicMap.find((int)theMusicFile);
-	TOD_ASSERT(anItr != aBass->mMusicMap.end());
+	SDLMusicInterface* anSDL = (SDLMusicInterface*)mApp->mMusicInterface;
+	auto anItr = anSDL->mMusicMap.find((int)theMusicFile);
+	TOD_ASSERT(anItr != anSDL->mMusicMap.end());
 	return anItr->second.mHMusic;
 }
 
 //0x45AC70
 void Music::PlayFromOffset(MusicFile theMusicFile, int theOffset, double theVolume)
 {
-	BassMusicInterface* aBass = (BassMusicInterface*)mApp->mMusicInterface;
-	auto anItr = aBass->mMusicMap.find((int)theMusicFile);
-	TOD_ASSERT(anItr != aBass->mMusicMap.end());
-	BassMusicInfo* aMusicInfo = &anItr->second;
+	SDLMusicInterface* anSDL = (SDLMusicInterface*)mApp->mMusicInterface;
+	auto anItr = anSDL->mMusicMap.find((int)theMusicFile);
+	TOD_ASSERT(anItr != anSDL->mMusicMap.end());
+	SDLMusicInfo* aMusicInfo = &anItr->second;
 
+	/*
 	if (aMusicInfo->mHStream)
 	{
 		bool aNoLoop = theMusicFile == MusicFile::MUSIC_FILE_CREDITS_ZOMBIES_ON_YOUR_LAWN;  // MV 音乐不循环
 		mMusicInterface->PlayMusic(theMusicFile, theOffset, aNoLoop);
 	}
 	else
+	*/
 	{
+		Mix_HaltMusicStream(aMusicInfo->mHMusic);
+		aMusicInfo->mStopOnFade = false;
+		aMusicInfo->mVolume = aMusicInfo->mVolumeCap * theVolume;
+		aMusicInfo->mVolumeAdd = 0.0;
+		Mix_PlayMusicStream(aMusicInfo->mHMusic, -1);
+		Mix_ModMusicStreamJumpToOrder(aMusicInfo->mHMusic, theOffset);
+		Mix_VolumeMusicStream(aMusicInfo->mHMusic, (int)(aMusicInfo->mVolume*128));
+		SetupMusicFileForTune(theMusicFile, mCurMusicTune);  // 调整每条轨道的静音与否
+		/*
 		gBass->BASS_ChannelStop(aMusicInfo->mHMusic);  // 先停止正在播放的音乐
 		SetupMusicFileForTune(theMusicFile, mCurMusicTune);  // 调整每条轨道的静音与否
 		aMusicInfo->mStopOnFade = false;
@@ -265,8 +271,9 @@ void Music::PlayFromOffset(MusicFile theMusicFile, int theOffset, double theVolu
 		//gBass->BASS_ChannelSetAttribute(aMusicInfo->mHMusic, -1, aMusicInfo->mVolume * 100.0, -101);  // 调整音乐音量
 		gBass->BASS_ChannelSetAttribute(aMusicInfo->mHMusic, BASS_ATTRIB_VOL, aMusicInfo->mVolume);
 		gBass->BASS_ChannelFlags(aMusicInfo->mHMusic, BASS_MUSIC_POSRESET | BASS_MUSIC_RAMP | BASS_MUSIC_LOOP, -1);
-		gBass->BASS_ChannelSetPosition(aMusicInfo->mHMusic, MAKELONG(theOffset, 0) /**/, BASS_POS_MUSIC_ORDER);  // 设置偏移位置
+		gBass->BASS_ChannelSetPosition(aMusicInfo->mHMusic, MAKELONG(theOffset, 0), BASS_POS_MUSIC_ORDER);  // 设置偏移位置
 		gBass->BASS_ChannelPlay(aMusicInfo->mHMusic, false);  // 重新开始播放
+		*/
 	}
 }
 
@@ -403,9 +410,10 @@ void Music::PlayMusic(MusicTune theMusicTune, int theOffset, int theDrumsOffset)
 
 	if (aRestartingSong)
 	{
+		/*
 		if (mCurMusicFileMain != MusicFile::MUSIC_FILE_NONE)
 		{
-			HMUSIC aHMusic = GetBassMusicHandle(mCurMusicFileMain);
+			Mix_Music* aHMusic = GetMusicHandle(mCurMusicFileMain);
 			gBass->BASS_ChannelSetAttribute(aHMusic, BASS_ATTRIB_MUSIC_BPM, mBaseBPM);
 			gBass->BASS_ChannelSetAttribute(aHMusic, BASS_ATTRIB_MUSIC_SPEED, mBaseModSpeed);
 		}
@@ -421,19 +429,22 @@ void Music::PlayMusic(MusicTune theMusicTune, int theOffset, int theDrumsOffset)
 			gBass->BASS_ChannelSetAttribute(aHMusic, BASS_ATTRIB_MUSIC_BPM, mBaseBPM);
 			gBass->BASS_ChannelSetAttribute(aHMusic, BASS_ATTRIB_MUSIC_SPEED, mBaseModSpeed);
 		}
+		*/
 	}
 	else
 	{
-		HMUSIC aHMusic = GetBassMusicHandle(mCurMusicFileMain);
+		Mix_Music* aHMusic = GetMusicHandle(mCurMusicFileMain);
+		/*
 		gBass->BASS_ChannelGetAttribute(aHMusic, BASS_ATTRIB_MUSIC_BPM, &mBaseBPM);
 		gBass->BASS_ChannelGetAttribute(aHMusic, BASS_ATTRIB_MUSIC_SPEED, &mBaseModSpeed);
+		*/
 	}
 }
 
 unsigned long Music::GetMusicOrder(MusicFile theMusicFile)
 {
 	TOD_ASSERT(theMusicFile != MusicFile::MUSIC_FILE_NONE);
-	return ((BassMusicInterface*)mApp->mMusicInterface)->GetMusicOrder((int)theMusicFile);
+	return ((SDLMusicInterface*)mApp->mMusicInterface)->GetMusicOrder((int)theMusicFile);
 }
 
 //0x45B1B0
@@ -444,7 +455,7 @@ void Music::MusicResyncChannel(MusicFile theMusicFileToMatch, MusicFile theMusic
 	int aDiff = (aPosToSync >> 16) - (aPosToMatch >> 16);  // 待同步的音乐与目标音乐的乐曲序号之差
 	if (abs(aDiff) <= 128)  // 当前进行的乐曲序号之差超过 128 时，开摆（
 	{
-		HMUSIC aHMusic = GetBassMusicHandle(theMusicFileToSync);
+		//HMUSIC aHMusic = GetBassMusicHandle(theMusicFileToSync);
 
 		int aBPM = mBaseBPM;
 		if (aDiff > 2)
@@ -456,7 +467,7 @@ void Music::MusicResyncChannel(MusicFile theMusicFileToMatch, MusicFile theMusic
 		else if (aDiff < 0)
 			aBPM -= 1;
 
-		gBass->BASS_ChannelSetAttribute(aHMusic, BASS_ATTRIB_MUSIC_BPM, aBPM);  // 适当调整待同步音乐的速率以缩小差距
+		//gBass->BASS_ChannelSetAttribute(aHMusic, BASS_ATTRIB_MUSIC_BPM, aBPM);  // 适当调整待同步音乐的速率以缩小差距
 	}
 }
 
@@ -592,17 +603,23 @@ void Music::UpdateMusicBurst()
 	int aOrderMain = 0, aOrderDrum = 0;
 	if (aBurstScheme == 1)
 	{
-		aOrderMain = HIWORD(aPackedOrderMain) / 128;
-		aOrderDrum = HIWORD(mQueuedDrumTrackPackedOrder) / 128;
+		//aOrderMain = HIWORD(aPackedOrderMain) / 128;
+		//aOrderDrum = HIWORD(mQueuedDrumTrackPackedOrder) / 128;
+		aOrderMain = aPackedOrderMain;
+		aOrderDrum = mQueuedDrumTrackPackedOrder;
 	}
 	else if (aBurstScheme == 2)
 	{
+		/*
 		aOrderMain = LOWORD(aPackedOrderMain);
 		aOrderDrum = LOWORD(mQueuedDrumTrackPackedOrder);
 		if (HIWORD(aPackedOrderMain) > 252)
 			aOrderMain++;
 		if (HIWORD(mQueuedDrumTrackPackedOrder) > 252)
 			aOrderDrum++;
+		*/
+		aOrderMain = aPackedOrderMain;
+		aOrderDrum = mQueuedDrumTrackPackedOrder;
 	}
 
 	switch (mMusicDrumsState)
@@ -649,7 +666,8 @@ void Music::UpdateMusicBurst()
 		mMusicInterface->SetSongVolume(mCurMusicFileMain, aMainTrackVolume);
 		mMusicInterface->SetSongVolume(mCurMusicFileDrums, aDrumsVolume);
 		if (aDrumsJumpOrder != -1)
-			gBass->BASS_ChannelSetPosition(GetBassMusicHandle(mCurMusicFileDrums), MAKELONG(aDrumsJumpOrder,0) /*| 0x80000000*/, BASS_POS_MUSIC_ORDER);
+			Mix_ModMusicStreamJumpToOrder(GetMusicHandle(mCurMusicFileDrums), aDrumsJumpOrder);
+			//gBass->BASS_ChannelSetPosition(GetBassMusicHandle(mCurMusicFileDrums), MAKELONG(aDrumsJumpOrder,0) /*| 0x80000000*/, BASS_POS_MUSIC_ORDER);
 	}
 }
 
@@ -724,20 +742,21 @@ void Music::GameMusicPause(bool thePause)
 	{
 		if (!mPaused && mCurMusicTune != MusicTune::MUSIC_TUNE_NONE)
 		{
-			BassMusicInterface* aBass = (BassMusicInterface*)mMusicInterface;
-			auto anItr = aBass->mMusicMap.find(mCurMusicFileMain);
-			TOD_ASSERT(anItr != aBass->mMusicMap.end());
-			BassMusicInfo* aMusicInfo = &anItr->second;
-			
+			SDLMusicInterface* anSDL = (SDLMusicInterface*)mMusicInterface;
+			auto anItr = anSDL->mMusicMap.find(mCurMusicFileMain);
+			TOD_ASSERT(anItr != anSDL->mMusicMap.end());
+			SDLMusicInfo* aMusicInfo = &anItr->second;
+
+			/*
 			if (aMusicInfo->mHStream)
 			{
 				mPauseOffset = gBass->BASS_ChannelGetPosition(aMusicInfo->mHStream, BASS_POS_MUSIC_ORDER);
 				mMusicInterface->StopMusic(mCurMusicFileMain);
 			}
 			else
+			*/
 			{
-				int aOrderMain = GetMusicOrder(mCurMusicFileMain);
-				mPauseOffset = MAKELONG(LOWORD(aOrderMain), HIWORD(aOrderMain) / 4);
+				mPauseOffset = GetMusicOrder(mCurMusicFileMain);
 				mMusicInterface->StopMusic(mCurMusicFileMain);
 
 				if (mCurMusicTune == MusicTune::MUSIC_TUNE_DAY_GRASSWALK || mCurMusicTune == MusicTune::MUSIC_TUNE_POOL_WATERYGRAVES ||
@@ -748,8 +767,7 @@ void Music::GameMusicPause(bool thePause)
 				}
 				else if (mCurMusicTune == MusicTune::MUSIC_TUNE_NIGHT_MOONGRAINS)
 				{
-					int aOrderDrum = GetMusicOrder(mCurMusicFileDrums);
-					mPauseOffsetDrums = MAKELONG(LOWORD(aOrderDrum), HIWORD(aOrderDrum) / 4);
+					mPauseOffsetDrums = GetMusicOrder(mCurMusicFileDrums);
 					mMusicInterface->StopMusic(mCurMusicFileDrums);
 				}
 			}

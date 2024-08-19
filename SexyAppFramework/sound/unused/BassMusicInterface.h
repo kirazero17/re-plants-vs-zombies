@@ -32,7 +32,6 @@ class BassMusicInterface : public MusicInterface
 public:	
 	BassMusicMap			mMusicMap;
 	int						mMaxMusicVolume;
-	int						mMusicLoadFlags;
 
 public:
 	BassMusicInterface();

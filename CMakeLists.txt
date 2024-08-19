@@ -33,14 +33,25 @@ find_package(ZLIB REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(PNG REQUIRED)
 find_package(SDL2 REQUIRED)
-find_package(SDL2_mixer REQUIRED)
 find_package(GLEW REQUIRED)
 
+set(USE_MIDI OFF CACHE BOOL "SDL Mixer X midi" FORCE)
+set(USE_MODPLUG OFF CACHE BOOL "SDL Mixer X modplug" FORCE)
+set(USE_XMP OFF CACHE BOOL "SDL Mixer X xmp" FORCE)
+set(USE_OPUS OFF CACHE BOOL "SDL Mixer X opus" FORCE)
+set(USE_DRFLAC OFF CACHE BOOL "SDL Mixer X flac" FORCE)
+set(USE_PXTONE OFF CACHE BOOL "SDL Mixer X pxtone" FORCE)
+add_subdirectory(SexyAppFramework/sound/SDL-Mixer-X)
+
 add_executable(re-plants-vs-zombies ${SOURCES})
-target_include_directories(re-plants-vs-zombies PRIVATE ${PROJECT_SOURCE_DIR}/SexyAppFramework ${SDL2_INCLUDE_DIRS})
+target_include_directories(re-plants-vs-zombies PRIVATE
+	${PROJECT_SOURCE_DIR}/SexyAppFramework
+	${PROJECT_SOURCE_DIR}/SexyAppFramework/sound/SDL-Mixer-X/include
+	${SDL2_INCLUDE_DIRS}
+)
 target_compile_definitions(re-plants-vs-zombies PRIVATE _DEBUG)
 
-target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer mpg123 opusfile opus ogg ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer_ext ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
 
 if (WIN32)
 	target_link_options(re-plants-vs-zombies PRIVATE -static -static-libgcc -static-libstdc++)

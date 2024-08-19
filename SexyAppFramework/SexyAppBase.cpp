@@ -31,7 +31,7 @@
 #include "misc/ModVal.h"
 //#include "graphics/SysFont.h"
 #include "misc/ResourceManager.h"
-#include "sound/BassMusicInterface.h"
+#include "sound/SDLMusicInterface.h"
 #include "misc/AutoCrit.h"
 #include "misc/Debug.h"
 #include "paklib/PakInterface.h"
@@ -5784,7 +5784,7 @@ MusicInterface* SexyAppBase::CreateMusicInterface()
 	if (mNoSoundNeeded)
 		return new DummyMusicInterface();
 	else
-		return new BassMusicInterface();
+		return new SDLMusicInterface();
 }
 
 void SexyAppBase::InitPropertiesHook()
