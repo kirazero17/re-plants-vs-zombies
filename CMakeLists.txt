@@ -35,6 +35,8 @@ find_package(PNG REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)
 
+set(SDL_MIXER_X_STATIC ON CACHE BOOL "Build static library of SDL Mixer X" FORCE)
+set(SDL_MIXER_X_SHARED OFF CACHE BOOL "Build shared library of SDL Mixer X" FORCE)
 set(USE_MIDI OFF CACHE BOOL "SDL Mixer X midi" FORCE)
 set(USE_MODPLUG OFF CACHE BOOL "SDL Mixer X modplug" FORCE)
 set(USE_XMP OFF CACHE BOOL "SDL Mixer X xmp" FORCE)
@@ -51,7 +53,7 @@ target_include_directories(re-plants-vs-zombies PRIVATE
 )
 target_compile_definitions(re-plants-vs-zombies PRIVATE _DEBUG)
 
-target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer_ext_Static ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer_ext_Static openmpt mpg123 vorbisfile vorbis ogg ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
 
 if (WIN32)
 	target_link_options(re-plants-vs-zombies PRIVATE -static -static-libgcc -static-libstdc++)
