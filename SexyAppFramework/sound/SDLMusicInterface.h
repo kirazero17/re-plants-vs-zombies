@@ -32,7 +32,7 @@ class SDLMusicInterface : public MusicInterface
 {
 public:
 	SDLMusicMap				mMusicMap;
-	int						mMaxMusicVolume;
+	int						mGlobalVolume;
 	int						mMusicLoadFlags;
 
 public:

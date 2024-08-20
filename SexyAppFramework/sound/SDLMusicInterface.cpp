@@ -14,7 +14,7 @@ SDLMusicInfo::SDLMusicInfo()
 
 SDLMusicInterface::SDLMusicInterface()
 {
-	mMaxMusicVolume = 40;
+	mGlobalVolume = MIX_MAX_VOLUME;
 }
 
 SDLMusicInterface::~SDLMusicInterface()
@@ -301,9 +301,7 @@ bool SDLMusicInterface::IsPlaying(int theSongId)
 
 void SDLMusicInterface::SetVolume(double theVolume)
 {
-	Mix_VolumeMusicGeneral((int)(theVolume*128));
-	//gBass->BASS_SetConfig(BASS_CONFIG_GVOL_MUSIC, (int) (theVolume * 10000));
-	//gBass->BASS_SetConfig(BASS_CONFIG_GVOL_STREAM, (int) (theVolume * 10000));
+	mGlobalVolume = (int)(theVolume*80);
 }
 
 void SDLMusicInterface::SetMusicAmplify(int theSongId, double theAmp)
@@ -313,6 +311,9 @@ void SDLMusicInterface::SetMusicAmplify(int theSongId, double theAmp)
 
 void SDLMusicInterface::Update()
 {
+	Mix_VolumeMusic(mGlobalVolume);
+	Mix_VolumeMusicGeneral(mGlobalVolume);
+
 	SDLMusicMap::iterator anItr = mMusicMap.begin();
 	while (anItr != mMusicMap.end())
 	{
