@@ -26,6 +26,10 @@ list(REMOVE_ITEM SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/Sexy.TodLib/TodDrawTriangleInc.cpp
 )
 
+set(NO_GLEW OFF)
+if(NINTENDO_SWITCH)
+	set(NO_GLEW ON)
+endif()
 
 option(CONSOLE "Show console on Windows" ON)
 
@@ -33,7 +37,9 @@ find_package(ZLIB REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(PNG REQUIRED)
 find_package(SDL2 REQUIRED)
-find_package(GLEW REQUIRED)
+if (NOT NO_GLEW)
+	find_package(GLEW REQUIRED)
+endif()
 
 set(SDL_MIXER_X_STATIC ON CACHE BOOL "Build static library of SDL Mixer X" FORCE)
 set(SDL_MIXER_X_SHARED OFF CACHE BOOL "Build shared library of SDL Mixer X" FORCE)
@@ -63,6 +69,9 @@ if (WIN32)
 	if(NOT CONSOLE)
 		target_link_options(re-plants-vs-zombies PRIVATE -mwindows)
 	endif()
+elseif (NINTENDO_SWITCH)
+	nx_generate_nacp(re-plants-vs-zombies "Plants vs. Zombies" "PopCap Games, Unofficial Switch port by Headshotnoby" "0.1")
+	nx_create_nro(re-plants-vs-zombies)
 else()
 	target_link_libraries(re-plants-vs-zombies GL)
 endif()
