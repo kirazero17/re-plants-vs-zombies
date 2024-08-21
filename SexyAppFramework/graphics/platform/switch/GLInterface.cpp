@@ -10,6 +10,9 @@
 #include "graphics/Graphics.h"
 #include "graphics/MemoryImage.h"
 
+#define MAX_VERTICES 16384
+#define GetColorFromTriVertex(theVertex, theColor) (theVertex.color?theVertex.color:theColor)
+
 using namespace Sexy;
 
 static int gMinTextureWidth;
@@ -21,18 +24,96 @@ static bool gTextureSizeMustBePow2;
 static const int MAX_TEXTURE_SIZE = 1024;
 static bool gLinearFilter = false;
 
+static GLVertex* gVertices;
+static int gNumVertices;
+static GLenum gVertexMode;
 
-struct GLVertex
+static void GfxBegin(GLenum vertexMode)
 {
-	float sx;
-	float sy;
-	float sz;
-	float rhw;
-	uint32_t color;
-	uint32_t specular;
-	float tu;
-	float tv;
-};
+	if (gVertexMode != (GLenum)-1) return;
+	gVertexMode = vertexMode;
+}
+
+static void GfxEnd()
+{
+	if (gVertexMode == (GLenum)-1) return;
+
+	glVertexPointer(3, GL_FLOAT, sizeof(GLVertex), (char*)gVertices);
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(GLVertex), (char*)gVertices + sizeof(float)*3);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(GLVertex), (char*)gVertices + sizeof(float)*3 + sizeof(uint32_t));
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glDrawArrays(gVertexMode, 0, gNumVertices);
+
+	gVertexMode = (GLenum)-1;
+	gNumVertices = 0;
+}
+
+static void GfxAddVertices(const GLVertex *arr, int arrCount)
+{
+	if (gVertexMode == (GLenum)-1) return;
+
+	if (gNumVertices + arrCount >= MAX_VERTICES)
+	{
+		GLenum oldMode = gVertexMode;
+		GfxEnd();
+		GfxBegin(oldMode);
+	}
+	
+	for (int i=gNumVertices; i<gNumVertices + arrCount; i++)
+	{
+		gVertices[i] = arr[i];
+	}
+	gNumVertices += arrCount;
+}
+
+static void GfxAddVertices(VertexList &arr)
+{
+	if (gVertexMode == (GLenum)-1) return;
+
+	if (gNumVertices + arr.size() >= MAX_VERTICES)
+	{
+		GLenum oldMode = gVertexMode;
+		GfxEnd();
+		GfxBegin(oldMode);
+	}
+
+	for (int i=gNumVertices; i<gNumVertices + arr.size(); i++)
+	{
+		gVertices[i] = arr[i];
+	}
+	gNumVertices += arr.size();
+}
+
+static void GfxAddVertices(const TriVertex arr[][3], int arrCount, unsigned int theColor, float tx, float ty, float aMaxTotalU, float aMaxTotalV)
+{
+	if (gVertexMode == (GLenum)-1) return;
+
+	if (gNumVertices + arrCount*3 >= MAX_VERTICES)
+	{
+		GLenum oldMode = gVertexMode;
+		GfxEnd();
+		GfxBegin(oldMode);
+	}
+
+	for (int aTriangleNum=0; aTriangleNum < arrCount; aTriangleNum++)
+	{
+		TriVertex* aTriVerts = (TriVertex*) arr[aTriangleNum];
+
+		for (int i = 0; i < 3; i++)
+		{
+			gVertices[gNumVertices+i].sx = aTriVerts[i].x + tx;
+			gVertices[gNumVertices+i].sy = aTriVerts[i].y + ty;
+			gVertices[gNumVertices+i].color = GetColorFromTriVertex(aTriVerts[i], theColor);
+			gVertices[gNumVertices+i].tu = aTriVerts[i].u * aMaxTotalU;
+			gVertices[gNumVertices+i].tv = aTriVerts[i].v * aMaxTotalV;
+		}
+
+		gNumVertices += 3;
+	}
+}
 
 
 static void CopyImageToTexture8888(MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
@@ -715,22 +796,17 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 			float y = dstY - 0.5f;
 
 			GLVertex aVertex[4] = {
-				{ {x},        {y},         {0},{1},{aColor},{0},{u1},{v1} },
-				{ {x},        {y+aHeight}, {0},{1},{aColor},{0},{u1},{v2} },
-				{ {x+aWidth}, {y},         {0},{1},{aColor},{0},{u2},{v1} },
-				{ {x+aWidth}, {y+aHeight}, {0},{1},{aColor},{0},{u2},{v2} }
+				{ {x},        {y},         {0},{aColor},{u1},{v1} },
+				{ {x},        {y+aHeight}, {0},{aColor},{u1},{v2} },
+				{ {x+aWidth}, {y},         {0},{aColor},{u2},{v1} },
+				{ {x+aWidth}, {y+aHeight}, {0},{aColor},{u2},{v2} }
 			};
 
 			glBindTexture(GL_TEXTURE_2D, aTexture);
 
-			glBegin(GL_TRIANGLE_STRIP);
-			for (int i=0; i<4; i++)
-			{
-				glColor4ubv((uint8_t*)&aVertex[i].color);
-				glTexCoord2f(aVertex[i].tu, aVertex[i].tv);
-				glVertex2f(aVertex[i].sx, aVertex[i].sy);
-			}
-			glEnd();
+			GfxBegin(GL_TRIANGLE_STRIP);
+			GfxAddVertices(aVertex, 4);
+			GfxEnd();
 
 			srcX += aWidth;
 			dstX += aWidth;
@@ -740,68 +816,6 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 		dstY += aHeight;
 	}
 }
-
-struct VertexList
-{
-	enum { MAX_STACK_VERTS = 100 };
-	GLVertex mStackVerts[MAX_STACK_VERTS];
-	GLVertex* mVerts;
-	int mSize;
-	int mCapacity;
-
-	typedef int size_type;
-
-	VertexList() : mVerts(mStackVerts), mSize(0), mCapacity(MAX_STACK_VERTS) { }
-	VertexList(const VertexList& theList) : mVerts(mStackVerts), mSize(theList.mSize), mCapacity(MAX_STACK_VERTS)
-	{
-		reserve(mSize);
-		memcpy(mVerts, theList.mVerts, mSize * sizeof(mVerts[0]));
-	}
-
-	~VertexList()
-	{
-		if (mVerts != mStackVerts)
-			delete mVerts;
-	}
-
-	void reserve(int theCapacity)
-	{
-		if (mCapacity < theCapacity)
-		{
-			mCapacity = theCapacity;
-			GLVertex* aNewList = new GLVertex[theCapacity];
-			memcpy(aNewList, mVerts, mSize * sizeof(mVerts[0]));
-			if (mVerts != mStackVerts)
-				delete mVerts;
-
-			mVerts = aNewList;
-		}
-	}
-
-	void push_back(const GLVertex& theVert)
-	{
-		if (mSize == mCapacity)
-			reserve(mCapacity * 2);
-
-		mVerts[mSize++] = theVert;
-	}
-
-	void operator=(const VertexList& theList)
-	{
-		reserve(theList.mSize);
-		mSize = theList.mSize;
-		memcpy(mVerts, theList.mVerts, mSize * sizeof(mVerts[0]));
-	}
-
-
-	GLVertex& operator[](int thePos)
-	{
-		return mVerts[thePos];
-	}
-
-	int size() { return mSize; }
-	void clear() { mSize = 0; }
-};
 
 static inline float GetCoord(const GLVertex& theVertex, int theCoord)
 {
@@ -900,16 +914,9 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 
 	if (aList.size() >= 3)
 	{
-		glBegin(GL_TRIANGLE_FAN);
-		for (unsigned i=0; i<aList.size(); i++)
-		{
-			GLVertex& v = aList[i];
-
-			glColor4ubv((uint8_t*)&v.color);
-			glTexCoord2f(v.tu, v.tv);
-			glVertex2f(v.sx, v.sy);
-		}
-		glEnd();
+		GfxBegin(GL_TRIANGLE_FAN);
+		GfxAddVertices(aList);
+		GfxEnd();
 	}
 }
 
@@ -1009,24 +1016,19 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 			}
 
 			GLVertex aVertex[4] = {
-				{ {tp[0].x},{tp[0].y},{0},{1},{aColor},{0},{u1},{v1} },
-				{ {tp[1].x},{tp[1].y},{0},{1},{aColor},{0},{u1},{v2} },
-				{ {tp[2].x},{tp[2].y},{0},{1},{aColor},{0},{u2},{v1} },
-				{ {tp[3].x},{tp[3].y},{0},{1},{aColor},{0},{u2},{v2} }
+				{ {tp[0].x},{tp[0].y},{0},{aColor},{u1},{v1} },
+				{ {tp[1].x},{tp[1].y},{0},{aColor},{u1},{v2} },
+				{ {tp[2].x},{tp[2].y},{0},{aColor},{u2},{v1} },
+				{ {tp[3].x},{tp[3].y},{0},{aColor},{u2},{v2} }
 			};
 
 			glBindTexture(GL_TEXTURE_2D, aTexture);
 
 			if (!clipped)
 			{
-				glBegin(GL_TRIANGLE_STRIP);
-				for (int i=0; i<4; i++)
-				{
-					glColor4ubv((uint8_t*)&aVertex[i].color);
-					glTexCoord2f(aVertex[i].tu, aVertex[i].tv);
-					glVertex2f(aVertex[i].sx, aVertex[i].sy);
-				}
-				glEnd();
+				GfxBegin(GL_TRIANGLE_STRIP);
+				GfxAddVertices(aVertex, 4);
+				GfxEnd();
 			}
 			else
 			{
@@ -1048,8 +1050,6 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 	}
 }
 
-#define GetColorFromTriVertex(theVertex, theColor) (theVertex.color?theVertex.color:theColor)
-
 void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTriangles, unsigned int theColor, float tx, float ty)
 {
 	if ((mMaxTotalU <= 1.0) && (mMaxTotalV <= 1.0))
@@ -1057,23 +1057,9 @@ void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTrian
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, mTextures[0].mTexture);
 
-		glBegin(GL_TRIANGLES);
-
-		for (int aTriangleNum = 0; aTriangleNum < theNumTriangles; aTriangleNum++)
-		{
-			TriVertex* aTriVerts = (TriVertex*) theVertices[aTriangleNum];
-
-			for (int i = 0; i < 3; i++)
-			{
-				unsigned int aColor = GetColorFromTriVertex(aTriVerts[i], theColor);
-
-				glColor4ubv((uint8_t*)&aColor);
-				glTexCoord2f(aTriVerts[i].u * mMaxTotalU, aTriVerts[i].v * mMaxTotalV);
-				glVertex2f(aTriVerts[i].x + tx, aTriVerts[i].y + ty);
-			}
-		}
-
-		glEnd();
+		GfxBegin(GL_TRIANGLES);
+		GfxAddVertices(theVertices, theNumTriangles, theColor, tx, ty, mMaxTotalU, mMaxTotalV);
+		GfxEnd();
 	}
 	else
 	{
@@ -1082,9 +1068,9 @@ void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTrian
 			TriVertex* aTriVerts = (TriVertex*) theVertices[aTriangleNum];
 
 			GLVertex aVertex[3] = {
-				{ {aTriVerts[0].x + tx},{aTriVerts[0].y + ty},	{0},{1},{GetColorFromTriVertex(aTriVerts[0],theColor)},	{0},{aTriVerts[0].u*mMaxTotalU},{aTriVerts[0].v*mMaxTotalV} },
-				{ {aTriVerts[1].x + tx},{aTriVerts[1].y + ty},	{0},{1},{GetColorFromTriVertex(aTriVerts[1],theColor)},	{0},{aTriVerts[1].u*mMaxTotalU},{aTriVerts[1].v*mMaxTotalV} },
-				{ {aTriVerts[2].x + tx},{aTriVerts[2].y + ty},	{0},{1},{GetColorFromTriVertex(aTriVerts[2],theColor)},	{0},{aTriVerts[2].u*mMaxTotalU},{aTriVerts[2].v*mMaxTotalV} }
+				{ {aTriVerts[0].x + tx},{aTriVerts[0].y + ty},	{0},{GetColorFromTriVertex(aTriVerts[0],theColor)},	{aTriVerts[0].u*mMaxTotalU},{aTriVerts[0].v*mMaxTotalV} },
+				{ {aTriVerts[1].x + tx},{aTriVerts[1].y + ty},	{0},{GetColorFromTriVertex(aTriVerts[1],theColor)},	{aTriVerts[1].u*mMaxTotalU},{aTriVerts[1].v*mMaxTotalV} },
+				{ {aTriVerts[2].x + tx},{aTriVerts[2].y + ty},	{0},{GetColorFromTriVertex(aTriVerts[2],theColor)},	{aTriVerts[2].u*mMaxTotalU},{aTriVerts[2].v*mMaxTotalV} }
 			};
 
 			float aMinU = mMaxTotalU, aMinV = mMaxTotalV;
@@ -1150,16 +1136,9 @@ void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTrian
 					if (aList.size() >= 3)
 					{
 						glBindTexture(GL_TEXTURE_2D, aPiece.mTexture);
-						glBegin(GL_TRIANGLE_FAN);
-						for (unsigned i=0; i<aList.size(); i++)
-						{
-							GLVertex& v = aList[i];
-
-							glColor4ubv((uint8_t*)&v.color);
-							glTexCoord2f(v.tu, v.tv);
-							glVertex2f(v.sx, v.sy);
-						}
-						glEnd();
+						GfxBegin(GL_TRIANGLE_FAN);
+						GfxAddVertices(aList);
+						GfxEnd();
 					}
 				}
 			}
@@ -1178,10 +1157,13 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 
 	mPresentationRect = Rect( 0, 0, mWidth, mHeight );
 
+	/*
 	SDL_DisplayMode aMode;
 	SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(mApp->mSDLWindow), &aMode);
 	mRefreshRate = aMode.refresh_rate;
 	if (!mRefreshRate) mRefreshRate = 60;
+	*/
+	mRefreshRate = 60;
 	mMillisecondsPerFrame = 1000/mRefreshRate;
 
 	mScreenImage = 0;
@@ -1190,6 +1172,11 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 	mNextCursorY = 0;
 	mCursorX = 0;
 	mCursorY = 0;
+
+	gVertexMode = (GLenum)-1;
+	gNumVertices = 0;
+	gVertices = new GLVertex[MAX_VERTICES];
+	memset(gVertices, 0, sizeof(GLVertex) * MAX_VERTICES);
 }
 
 GLInterface::~GLInterface()
@@ -1203,6 +1190,8 @@ GLInterface::~GLInterface()
 		delete (TextureData*)anImage->mD3DData;
 		anImage->mD3DData = NULL;
 	}
+
+	delete[] gVertices;
 }
 
 void GLInterface::SetDrawMode(int theDrawMode)
@@ -1252,6 +1241,7 @@ GLImage* GLInterface::GetScreenImage()
 
 void GLInterface::UpdateViewport()
 {
+	/*
 	// Restrict to 4:3
 	// https://bumbershootsoft.wordpress.com/2018/11/29/forcing-an-aspect-ratio-in-3d-with-opengl/
 
@@ -1282,10 +1272,19 @@ void GLInterface::UpdateViewport()
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	Flush();
+	*/
 }
 
 int GLInterface::Init(bool IsWindowed)
 {
+	static bool inited = false;
+	if (!inited)
+	{
+		inited = true;
+		glewExperimental = GL_TRUE;
+		const GLenum glewInitResult = glewInit();
+	}
+
 	int aMaxSize;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &aMaxSize);
 
@@ -1366,7 +1365,8 @@ bool GLInterface::PreDraw()
 
 void GLInterface::Flush()
 {
-	SDL_GL_SwapWindow(mApp->mSDLWindow);
+	gNumVertices = 0;
+	//SDL_GL_SwapWindow(mApp->mSDLWindow);
 }
 
 bool GLInterface::CreateImageTexture(MemoryImage *theImage)
@@ -1600,14 +1600,15 @@ void GLInterface::DrawLine(double theStartX, double theStartY, double theEndX, d
 
 	glDisable(GL_TEXTURE_2D);
 
-	glBegin(GL_LINE_STRIP);
-		glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
-		glVertex2f(x1, y1);
-		glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
-		glVertex2f(x2, y2);
-		glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
-		glVertex2f(x2+0.5f, y2+0.5f);
-	glEnd();
+	GLVertex aVertex[3] = {
+		{ {x1},{y1},{0},{theColor.ToInt()},{0},{0} },
+		{ {x2},{y2},{0},{theColor.ToInt()},{0},{0} },
+		{ {x2+0.5f},{y2+0.5f},{0},{theColor.ToInt()},{0},{0} },
+	};
+
+	GfxBegin(GL_LINE_STRIP);
+	GfxAddVertices(aVertex, 3);
+	GfxEnd();
 }
 
 void GLInterface::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
@@ -1622,11 +1623,11 @@ void GLInterface::FillRect(const Rect& theRect, const Color& theColor, int theDr
 	float aWidth = theRect.mWidth;
 	float aHeight = theRect.mHeight;
 
-	float aVertex[4][2] = {
-		{x, y},
-		{x, y+aHeight},
-		{x+aWidth, y},
-		{x+aWidth, y+aHeight},
+	GLVertex aVertex[4] = {
+		{ {x},        {y},         {0},{theColor.ToInt()},{0},{0} },
+		{ {x},        {y+aHeight}, {0},{theColor.ToInt()},{0},{0} },
+		{ {x+aWidth}, {y},         {0},{theColor.ToInt()},{0},{0} },
+		{ {x+aWidth}, {y+aHeight}, {0},{theColor.ToInt()},{0},{0} }
 	};
 
 	if (!mTransformStack.empty())
@@ -1639,20 +1640,16 @@ void GLInterface::FillRect(const Rect& theRect, const Color& theColor, int theDr
 			p[i] = mTransformStack.back()*p[i];
 			p[i].x -= 0.5f;
 			p[i].y -= 0.5f;
-			aVertex[i][0] = p[i].x;
-			aVertex[i][1] = p[i].y;
+			aVertex[i].sx = p[i].x;
+			aVertex[i].sy = p[i].y;
 		}
 	}
 
 	glDisable(GL_TEXTURE_2D);
 
-	glBegin(GL_TRIANGLE_STRIP);
-		for (int i=0; i<4; i++)
-		{
-			glColor4ub(theColor.mRed, theColor.mGreen, theColor.mBlue, theColor.mAlpha);
-			glVertex2f(aVertex[i][0], aVertex[i][1]);
-		}
-	glEnd();
+	GfxBegin(GL_TRIANGLE_STRIP);
+	GfxAddVertices(aVertex, 4);
+	GfxEnd();
 }
 
 void GLInterface::DrawTriangle(const TriVertex &p1, const TriVertex &p2, const TriVertex &p3, const Color &theColor, int theDrawMode)
@@ -1669,16 +1666,15 @@ void GLInterface::DrawTriangle(const TriVertex &p1, const TriVertex &p2, const T
 
 	glDisable(GL_TEXTURE_2D);
 
-	glBegin(GL_TRIANGLE_STRIP);
-		glColor4ubv((uint8_t*)&col1);
-		glVertex2f(p1.x, p1.y);
+	GLVertex aVertex[3] = {
+		{ {p1.x}, {p1.y}, {0}, {col1}, {0},{0} },
+		{ {p2.x}, {p2.y}, {0}, {col2}, {0},{0} },
+		{ {p3.x}, {p3.y}, {0}, {col3}, {0},{0} },
+	};
 
-		glColor4ubv((uint8_t*)&col2);
-		glVertex2f(p2.x, p2.y);
-
-		glColor4ubv((uint8_t*)&col3);
-		glVertex2f(p3.x, p3.y);
-	glEnd();
+	GfxBegin(GL_TRIANGLE_STRIP);
+	GfxAddVertices(aVertex, 3);
+	GfxEnd();
 }
 
 void GLInterface::DrawTriangleTex(const TriVertex &p1, const TriVertex &p2, const TriVertex &p3, const Color &theColor, int theDrawMode, Image *theTexture, bool blend)
@@ -1740,7 +1736,7 @@ void GLInterface::FillPoly(const Point theVertices[], int theNumVertices, const 
 	VertexList aList;
 	for (int i=0; i<theNumVertices; i++)
 	{
-		GLVertex vert = { {theVertices[i].mX + (float)tx}, {theVertices[i].mY + (float)ty}, {0}, {1}, {aColor}, {0}, {0}, {0} };
+		GLVertex vert = { {theVertices[i].mX + (float)tx}, {theVertices[i].mY + (float)ty}, {0}, {aColor}, {0}, {0} };
 		if (!mTransformStack.empty())
 		{
 			SexyVector2 v(vert.sx,vert.sy);
@@ -1756,15 +1752,8 @@ void GLInterface::FillPoly(const Point theVertices[], int theNumVertices, const 
 		DrawPolyClipped(theClipRect,aList);
 	else
 	{
-		glBegin(GL_TRIANGLE_FAN);
-		for (unsigned i=0; i<aList.size(); i++)
-		{
-			GLVertex& v = aList[i];
-
-			glColor4ubv((uint8_t*)&v.color);
-			glTexCoord2f(v.tu, v.tv);
-			glVertex2f(v.sx, v.sy);
-		}
-		glEnd();
+		GfxBegin(GL_TRIANGLE_FAN);
+		GfxAddVertices(aList);
+		GfxEnd();
 	}
 }
