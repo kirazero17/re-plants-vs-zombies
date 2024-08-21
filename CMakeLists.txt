@@ -27,8 +27,19 @@ list(REMOVE_ITEM SOURCES
 )
 
 set(NO_GLEW OFF)
+set(USE_EGL OFF)
+set(USE_GLES OFF)
 if(NINTENDO_SWITCH)
 	set(NO_GLEW ON)
+	set(USE_EGL ON)
+	set(USE_GLES ON)
+	list(APPEND SOURCES
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/graphics/platform/switch/GLInterface.cpp
+	)
+else()
+	list(APPEND SOURCES
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/graphics/platform/pc/GLInterface.cpp
+	)
 endif()
 
 option(CONSOLE "Show console on Windows" ON)
@@ -59,6 +70,16 @@ target_include_directories(re-plants-vs-zombies PRIVATE
 )
 target_compile_definitions(re-plants-vs-zombies PRIVATE _DEBUG)
 
+if (NO_GLEW)
+	target_compile_definitions(re-plants-vs-zombies PRIVATE NO_GLEW)
+endif()
+if (USE_EGL)
+	target_compile_definitions(re-plants-vs-zombies PRIVATE USE_EGL)
+endif()
+if (USE_GLES)
+	target_compile_definitions(re-plants-vs-zombies PRIVATE USE_GLES)
+endif()
+
 target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer_ext_Static openmpt mpg123 vorbisfile vorbis ogg ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
 
 if (WIN32)
@@ -70,6 +91,7 @@ if (WIN32)
 		target_link_options(re-plants-vs-zombies PRIVATE -mwindows)
 	endif()
 elseif (NINTENDO_SWITCH)
+	target_link_libraries(re-plants-vs-zombies glad EGL glapi drm_nouveau)
 	nx_generate_nacp(re-plants-vs-zombies "Plants vs. Zombies" "PopCap Games, Unofficial Switch port by Headshotnoby" "0.1")
 	nx_create_nro(re-plants-vs-zombies)
 else()

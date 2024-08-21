@@ -170,7 +170,7 @@ public:
 	WidgetManager*			mWidgetManager;
 	DialogMap				mDialogMap;
 	DialogList				mDialogList;
-	DWORD					mPrimaryThreadId;
+	void*					mPrimaryThreadId;
 	bool					mSEHOccured;
 	bool					mShutdown;
 	bool					mExitToTop;

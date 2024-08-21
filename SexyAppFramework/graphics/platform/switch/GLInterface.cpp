@@ -1,14 +1,14 @@
-#include <SDL.h>
-#include <GL/glew.h>
-#include <GL/glext.h>
+#include <EGL/egl.h>    // EGL library
+#include <EGL/eglext.h> // EGL extensions
+#include <glad/glad.h>  // glad library (OpenGL loader)
 
-#include "GLInterface.h"
-#include "GLImage.h"
+#include "graphics/GLInterface.h"
+#include "graphics/GLImage.h"
 #include "SexyAppBase.h"
 #include "misc/AutoCrit.h"
 #include "misc/CritSect.h"
-#include "Graphics.h"
-#include "MemoryImage.h"
+#include "graphics/Graphics.h"
+#include "graphics/MemoryImage.h"
 
 using namespace Sexy;
 
@@ -1250,21 +1250,6 @@ GLImage* GLInterface::GetScreenImage()
 	return mScreenImage;
 }
 
-static void GLAPIENTRY MessageCallback(
-	GLenum source,
-	GLenum type,
-	GLuint id,
-	GLenum severity,
-	GLsizei length,
-	const GLchar* message,
-	const void* userParam)
-{
-	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-		( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-		type, severity, message );
-	fflush(stderr);
-}
-
 void GLInterface::UpdateViewport()
 {
 	// Restrict to 4:3
@@ -1326,9 +1311,6 @@ int GLInterface::Init(bool IsWindowed)
 	glDisable(GL_DITHER);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(MessageCallback, 0);
 
 	mRGBBits = 32;
 

@@ -8,10 +8,6 @@
 #include <time.h>
 #include <math.h>
 
-#ifndef NO_GLEW
-#include <GL/glew.h>
-#endif
-
 #include "SexyAppBase.h"
 //#include "misc/SEHCatcher.h"
 #include "widget/WidgetManager.h"
@@ -166,6 +162,10 @@ SexyAppBase::SexyAppBase()
 	//GetModuleFileNameA(NULL, aPath, 256);
 	//mProductVersion = GetProductVersion(aPath);	
 	//mChangeDirTo = GetFileDir(aPath);
+
+#ifdef __SWITCH__
+	mChangeDirTo = "sdmc:/switch/PlantsvsZombies/";
+#endif
 
 	mNoDefer = false;	
 	mFullScreenPageFlip = true; // should we page flip in fullscreen?
@@ -2234,7 +2234,7 @@ void SexyAppBase::ShutdownHook()
 
 void SexyAppBase::Shutdown()
 {
-	if ((mPrimaryThreadId != 0) && (pthread_self() != mPrimaryThreadId))
+	if ((mPrimaryThreadId != 0) && ((void*)pthread_self() != mPrimaryThreadId))
 	{
 		mLoadingFailed = true;
 	}
@@ -3367,7 +3367,7 @@ void SexyAppBase::ClearKeysDown()
 void SexyAppBase::WriteDemoTimingBlock()
 {
 	// Demo writing functions can only be called from the main thread and after SexyAppBase::Init
-	DBG_ASSERTE(pthread_self() == mPrimaryThreadId);
+	DBG_ASSERTE((void*)pthread_self() == mPrimaryThreadId);
 
 	while (mUpdateCount - mLastDemoUpdateCnt > 15)
 	{
@@ -4350,6 +4350,8 @@ void SexyAppBase::MakeWindow()
 	//OutputDebugString("MAKING WINDOW\r\n");
 
 	bool reload = false;
+
+#ifndef USE_EGL
 	if (mSDLWindow)
 	{
 		reload = true;
@@ -4373,13 +4375,8 @@ void SexyAppBase::MakeWindow()
 
 	mSDLGLContext = (SDL_GLContext*)SDL_GL_CreateContext(mSDLWindow);
     SDL_GL_SetSwapInterval(1);
-
-#ifndef NO_GLEW
-	if (!reload)
-	{
-		glewExperimental = GL_TRUE;
-		const GLenum glewInitResult = glewInit();
-	}
+#else
+	
 #endif
 
 	/*
@@ -5800,7 +5797,7 @@ void SexyAppBase::InitHook()
 
 void SexyAppBase::Init()
 {
-	mPrimaryThreadId = pthread_self();	
+	mPrimaryThreadId = (void*)pthread_self();	
 	
 	if (mShutdown)
 		return;
