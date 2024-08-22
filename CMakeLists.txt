@@ -34,10 +34,12 @@ if(NINTENDO_SWITCH)
 	set(USE_EGL ON)
 	set(USE_GLES ON)
 	list(APPEND SOURCES
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/graphics/platform/switch/Window.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/graphics/platform/switch/GLInterface.cpp
 	)
 else()
 	list(APPEND SOURCES
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/graphics/platform/pc/Window.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/graphics/platform/pc/GLInterface.cpp
 	)
 endif()

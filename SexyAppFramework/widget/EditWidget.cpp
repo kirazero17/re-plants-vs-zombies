@@ -6,6 +6,8 @@
 #include "EditListener.h"
 #include "../../Resources.h" // bad
 
+#include <SDL.h>
+
 using namespace Sexy;
 
 static int gEditWidgetColors[][3] = 

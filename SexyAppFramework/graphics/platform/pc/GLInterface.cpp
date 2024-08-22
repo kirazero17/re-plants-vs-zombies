@@ -1159,7 +1159,7 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 	mPresentationRect = Rect( 0, 0, mWidth, mHeight );
 
 	SDL_DisplayMode aMode;
-	SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(mApp->mSDLWindow), &aMode);
+	SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex((SDL_Window*)mApp->mWindow), &aMode);
 	mRefreshRate = aMode.refresh_rate;
 	if (!mRefreshRate) mRefreshRate = 60;
 	mMillisecondsPerFrame = 1000/mRefreshRate;
@@ -1247,7 +1247,7 @@ void GLInterface::UpdateViewport()
 	int viewport_x = 0;
 	int viewport_y = 0;
 
-	SDL_GL_GetDrawableSize(mApp->mSDLWindow, &width, &height);
+	SDL_GL_GetDrawableSize((SDL_Window*)mApp->mWindow, &width, &height);
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	Flush();
@@ -1362,7 +1362,7 @@ bool GLInterface::PreDraw()
 void GLInterface::Flush()
 {
 	gNumVertices = 0;
-	SDL_GL_SwapWindow(mApp->mSDLWindow);
+	SDL_GL_SwapWindow((SDL_Window*)mApp->mWindow);
 }
 
 bool GLInterface::CreateImageTexture(MemoryImage *theImage)

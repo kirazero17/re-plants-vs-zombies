@@ -11,8 +11,6 @@
 #include "graphics/SharedImage.h"
 #include "misc/Ratio.h"
 
-#include <SDL.h>
-
 /*
 extern HMODULE gDDrawDLL;
 extern HMODULE gDSoundDLL;
@@ -132,8 +130,8 @@ typedef std::map<HANDLE, int> HandleToIntMap;
 class SexyAppBase : public ButtonListener, public DialogListener
 {
 public:
-	SDL_Window*				mSDLWindow;
-	SDL_GLContext*			mSDLGLContext;
+	void*					mWindow;
+	void*					mContext;
 
 	uint32_t					mRandSeed;
 		
