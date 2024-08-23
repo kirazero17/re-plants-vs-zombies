@@ -1524,8 +1524,7 @@ bool GLInterface::PreDraw()
 
 void GLInterface::Flush()
 {
-	gNumVertices = 0;
-	//SDL_GL_SwapWindow(mApp->mSDLWindow);
+	eglSwapBuffers(mApp->mWindow, mApp->mSurface);
 }
 
 bool GLInterface::CreateImageTexture(MemoryImage *theImage)
