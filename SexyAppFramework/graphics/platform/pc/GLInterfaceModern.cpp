@@ -35,7 +35,7 @@ static int gNumVertices;
 static GLenum gVertexMode;
 static GLuint gProgram;
 static GLuint gVao, gVbo;
-static GLint gUfViewMtx, gUfProjMtx, gUfTexture;
+static GLint gUfViewMtx, gUfProjMtx, gUfTexture, gUfUseTexture;
 
 static void GfxBegin(GLenum vertexMode)
 {
@@ -123,12 +123,13 @@ static void GfxAddVertices(const TriVertex arr[][3], int arrCount, unsigned int 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static const char *TEXTURED_SHADER =
+static const char *SHADER_CODE =
 "\n precision mediump float;"
 "\n "
 "\n uniform mat4 view;"
 "\n uniform mat4 projection;"
 "\n uniform sampler2D TextureSamp;"
+"\n uniform int UseTexture;"
 "\n "
 "\n v2f vec4 v_color;"
 "\n v2f vec2 v_uv;"
@@ -154,38 +155,10 @@ static const char *TEXTURED_SHADER =
 "\n "
 "\n     void main() "
 "\n     {"
-"\n         vec4 texColor = texture2D( TextureSamp, v_uv );"
-"\n         vec3 mainColor = mix( v_color.rgb, texColor.rgb, texColor.a );"
-"\n         color = vec4( mainColor, v_color.a );"
-"\n     }"
-"\n "
-"\n #endif";
-
-static const char *UNTEXTURED_SHADER =
-"\n uniform mat4 view;"
-"\n uniform mat4 projection;"
-"\n "
-"\n v2f vec4 v_color;"
-"\n "
-"\n #ifdef VERTEX"
-"\n "
-"\n     in vec3 position;"
-"\n     in vec4 color;"
-"\n     in vec2 uv;"
-"\n "
-"\n     void main()"
-"\n     {"
-"\n         v_color = color;"
-"\n "
-"\n         gl_Position = projection * view * vec4( position, 1. );"
-"\n     }"
-"\n "
-"\n #endif"
-"\n #ifdef FRAGMENT"
-"\n "
-"\n     void main() "
-"\n     {"
-"\n         gl_FragColor = v_color;"
+"\n         if (UseTexture == 1)"
+"\n             color = texture2D(TextureSamp, v_uv) * v_color;"
+"\n         else"
+"\n             color = v_color;"
 "\n     }"
 "\n "
 "\n #endif";
@@ -908,6 +881,7 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(gUfUseTexture, 1);
 
 	while(srcY < srcBottom)
 	{
@@ -1101,6 +1075,7 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(gUfUseTexture, 1);
 
 	while(srcY < srcBottom)
 	{
@@ -1185,6 +1160,7 @@ void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTrian
 		glEnable(GL_TEXTURE_2D);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mTextures[0].mTexture);
+		glUniform1i(gUfUseTexture, 1);
 
 		GfxBegin(GL_TRIANGLES);
 		GfxAddVertices(theVertices, theNumTriangles, theColor, tx, ty, mMaxTotalU, mMaxTotalV);
@@ -1409,11 +1385,12 @@ int GLInterface::Init(bool IsWindowed)
 		glewExperimental = GL_TRUE;
 		const GLenum glewInitResult = glewInit();
 
-		gProgram = shaderLoad(TEXTURED_SHADER);
+		gProgram = shaderLoad(SHADER_CODE);
 
 		gUfViewMtx = glGetUniformLocation(gProgram, "view");
 		gUfProjMtx = glGetUniformLocation(gProgram, "projection");
 		gUfTexture = glGetUniformLocation(gProgram, "TextureSamp");
+		gUfUseTexture = glGetUniformLocation(gProgram, "UseTexture");
 
 		glGenVertexArrays(1, &gVao);
 		glGenBuffers(1, &gVbo);
@@ -1747,6 +1724,7 @@ void GLInterface::DrawLine(double theStartX, double theStartY, double theEndX, d
 	}
 
 	glDisable(GL_TEXTURE_2D);
+	glUniform1i(gUfUseTexture, 0);
 
 	GLVertex aVertex[3] = {
 		{ {x1},{y1},{0},{theColor.ToInt()},{0},{0} },
@@ -1794,6 +1772,7 @@ void GLInterface::FillRect(const Rect& theRect, const Color& theColor, int theDr
 	}
 
 	glDisable(GL_TEXTURE_2D);
+	glUniform1i(gUfUseTexture, 0);
 
 	GfxBegin(GL_TRIANGLE_STRIP);
 	GfxAddVertices(aVertex, 4);
@@ -1813,6 +1792,7 @@ void GLInterface::DrawTriangle(const TriVertex &p1, const TriVertex &p2, const T
 	unsigned int col3 = GetColorFromTriVertex(p1, aColor);
 
 	glDisable(GL_TEXTURE_2D);
+	glUniform1i(gUfUseTexture, 0);
 
 	GLVertex aVertex[3] = {
 		{ {p1.x}, {p1.y}, {0}, {col1}, {0},{0} },
@@ -1880,6 +1860,7 @@ void GLInterface::FillPoly(const Point theVertices[], int theNumVertices, const 
 	unsigned int aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
 
 	glDisable(GL_TEXTURE_2D);
+	glUniform1i(gUfUseTexture, 0);
 
 	VertexList aList;
 	for (int i=0; i<theNumVertices; i++)
