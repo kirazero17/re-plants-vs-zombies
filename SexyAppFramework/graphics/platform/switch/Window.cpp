@@ -20,16 +20,18 @@ void SexyAppBase::MakeWindow()
 	// Initialize the EGL display connection
 	eglInitialize(mWindow, nullptr, nullptr);
 
-	// Select OpenGL ES as the desired graphics API
-	if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE)
+	// Select OpenGL (Core) as the desired graphics API
+	if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE)
+	{
+		eglTerminate(mWindow);
 		return;
+	}
 
 	// Get an appropriate EGL framebuffer configuration
 	EGLConfig config;
 	EGLint numConfigs;
 	static const EGLint framebufferAttributeList[] =
 	{
-		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 		EGL_RED_SIZE,     8,
 		EGL_GREEN_SIZE,   8,
 		EGL_BLUE_SIZE,    8,
@@ -54,8 +56,14 @@ void SexyAppBase::MakeWindow()
 	}
 
 	// Create an EGL rendering context
-	static EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-	mContext = eglCreateContext(mWindow, config, EGL_NO_CONTEXT, context_attribs);
+	static const EGLint contextAttributeList[] =
+	{
+		EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR,
+		EGL_CONTEXT_MAJOR_VERSION_KHR, 4,
+		EGL_CONTEXT_MINOR_VERSION_KHR, 3,
+		EGL_NONE
+	};
+	mContext = eglCreateContext(mWindow, config, EGL_NO_CONTEXT, contextAttributeList);
 	if (!mContext)
 	{
 		eglDestroySurface(mWindow, mSurface);
@@ -76,7 +84,7 @@ void SexyAppBase::MakeWindow()
 	mActive = true;
 
 	mPhysMinimized = false;
-	
+
 	if (isActive != mActive)
 		RehupFocus();
 

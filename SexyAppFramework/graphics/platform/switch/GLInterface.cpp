@@ -48,7 +48,7 @@ static void GfxEnd()
 
 	glBindVertexArray(gVao);
 	glBindBuffer(GL_ARRAY_BUFFER, gVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLVertex) * gNumVertices, gVertices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLVertex) * MAX_VERTICES, gVertices, GL_STATIC_DRAW);
 
 	glDrawArrays(gVertexMode, 0, gNumVertices);
 
@@ -122,22 +122,22 @@ static void GfxAddVertices(const TriVertex arr[][3], int arrCount, unsigned int 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static const char *SHADER_CODE =
+static const char *TEXTURED_SHADER =
+"\n #ifdef FRAGMENT"
 "\n precision mediump float;"
+"\n #endif"
 "\n "
-"\n uniform mat4 view;"
-"\n uniform mat4 projection;"
-"\n uniform sampler2D TextureSamp;"
-"\n uniform int UseTexture;"
-"\n "
-"\n v2f vec4 v_color;"
-"\n v2f vec2 v_uv;"
+"\n varying vec4 v_color;"
+"\n varying vec2 v_uv;"
 "\n "
 "\n #ifdef VERTEX"
 "\n "
-"\n     in vec3 position;"
-"\n     in vec4 color;"
-"\n     in vec2 uv;"
+"\n     uniform mat4 view;"
+"\n     uniform mat4 projection;"
+"\n "
+"\n     attribute vec3 position;"
+"\n     attribute vec4 color;"
+"\n     attribute vec2 uv;"
 "\n "
 "\n     void main()"
 "\n     {"
@@ -150,14 +150,15 @@ static const char *SHADER_CODE =
 "\n #endif"
 "\n #ifdef FRAGMENT"
 "\n "
-"\n     out vec4 color;"
+"\n     uniform sampler2D TextureSamp;"
+"\n     uniform int UseTexture;"
 "\n "
 "\n     void main() "
 "\n     {"
 "\n         if (UseTexture == 1)"
-"\n             color = texture2D(TextureSamp, v_uv) * v_color;"
+"\n             gl_FragColor = texture2D(TextureSamp, v_uv) * v_color;"
 "\n         else"
-"\n             color = v_color;"
+"\n             gl_FragColor = v_color;"
 "\n     }"
 "\n "
 "\n #endif";
@@ -165,8 +166,8 @@ static const char *SHADER_CODE =
 static GLuint shaderCompile(const char *shaderStr, uint32_t shaderStrLen, GLenum shaderType)
 {
 	const GLchar *shaderDefine = (shaderType == GL_VERTEX_SHADER)
-		? "\n#version 300 es\n#define VERTEX  \n#define v2f out\n"
-		: "\n#version 300 es\n#define FRAGMENT\n#define v2f in\n";
+		? "\n#version 150\n#define VERTEX  \n#define v2f out\n"
+		: "\n#version 150\n#define FRAGMENT\n#define v2f in\n";
 
 	const GLchar *shaderStrings[2] = {shaderDefine, shaderStr};
 	GLint shaderStringLengths[2] = {(GLint)strlen(shaderDefine), (GLint)shaderStrLen};
@@ -1345,22 +1346,15 @@ GLImage* GLInterface::GetScreenImage()
 
 void GLInterface::UpdateViewport()
 {
-	/*
 	// Restrict to 4:3
 	// https://bumbershootsoft.wordpress.com/2018/11/29/forcing-an-aspect-ratio-in-3d-with-opengl/
 
-	int width, viewport_width;
-	int height, viewport_height;
 	int viewport_x = 0;
 	int viewport_y = 0;
-
-	SDL_GL_GetDrawableSize(mApp->mSDLWindow, &width, &height);
-
-	glClear(GL_COLOR_BUFFER_BIT);
-	Flush();
-
-	viewport_width = width;
-	viewport_height = height;
+	int width = 1280;
+	int height = 720;
+	int viewport_width = width;
+	int viewport_height = height;
 	if (width * 3 > height * 4)
 	{
 		viewport_width = height * 4 / 3;
@@ -1376,7 +1370,6 @@ void GLInterface::UpdateViewport()
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	Flush();
-	*/
 }
 
 int GLInterface::Init(bool IsWindowed)
@@ -1389,7 +1382,7 @@ int GLInterface::Init(bool IsWindowed)
 		// Load OpenGL routines using glad
 		gladLoadGL();
 
-		gProgram = shaderLoad(SHADER_CODE);
+		gProgram = shaderLoad(TEXTURED_SHADER);
 
 		gUfViewMtx = glGetUniformLocation(gProgram, "view");
 		gUfProjMtx = glGetUniformLocation(gProgram, "projection");
@@ -1402,7 +1395,7 @@ int GLInterface::Init(bool IsWindowed)
 		glBindVertexArray(gVao);
 
 		glBindBuffer(GL_ARRAY_BUFFER, gVbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLVertex) * MAX_VERTICES, 0, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLVertex) * MAX_VERTICES, 0, GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLVertex), 0);
 		glEnableVertexAttribArray(0);
@@ -1455,6 +1448,9 @@ int GLInterface::Init(bool IsWindowed)
 	mBlueMask = (0xFFU << mBlueShift);
 
 	SetVideoOnlyDraw(false);
+	UpdateViewport();
+
+	eglSwapInterval(mApp->mWindow, 1);
 
 	return 1;
 }
@@ -1547,7 +1543,7 @@ bool GLInterface::RecoverBits(MemoryImage* theImage)
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, aPiece->mTexture);
 
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, theImage->GetBits());
+			//glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, theImage->GetBits());
 
 			/*
 			switch (aData->mPixelFormat)
