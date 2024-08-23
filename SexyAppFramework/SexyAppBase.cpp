@@ -297,6 +297,7 @@ SexyAppBase::SexyAppBase()
 
 	mWindow = 0;
 	mContext = 0;
+	mSurface = 0;
 
 	int i;
 

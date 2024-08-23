@@ -132,6 +132,7 @@ class SexyAppBase : public ButtonListener, public DialogListener
 public:
 	void*					mWindow;
 	void*					mContext;
+	void*					mSurface; // for EGL
 
 	uint32_t					mRandSeed;
 		
