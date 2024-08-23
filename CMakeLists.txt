@@ -94,8 +94,17 @@ if (WIN32)
 	endif()
 elseif (NINTENDO_SWITCH)
 	target_link_libraries(re-plants-vs-zombies glad EGL glapi drm_nouveau)
-	nx_generate_nacp(re-plants-vs-zombies "Plants vs. Zombies" "PopCap Games, Unofficial Switch port by Headshotnoby" "0.1")
-	nx_create_nro(re-plants-vs-zombies)
+
+	nx_generate_nacp(re-plants-vs-zombies.nacp
+		NAME "Plants vs. Zombies"
+		AUTHOR "PopCap Games, Unofficial Switch port by Headshotnoby"
+		VERSION "0.1"
+	)
+
+	nx_create_nro(re-plants-vs-zombies
+		NACP re-plants-vs-zombies.nacp
+		ICON ${CMAKE_CURRENT_SOURCE_DIR}/icon-switch.jpg
+	)
 else()
 	target_link_libraries(re-plants-vs-zombies GL)
 endif()
