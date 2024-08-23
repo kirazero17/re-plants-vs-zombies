@@ -17,7 +17,6 @@ int main(int argc, char** argv)
 	gAppHasUsedCheatKeys = LawnHasUsedCheatKeys;
 	gExtractResourcesByName = Sexy::ExtractResourcesByName;
 	gLawnApp = new LawnApp();
-	gLawnApp->mChangeDirTo = (!Sexy::FileExists("properties/resources.xml") && Sexy::FileExists("../properties/resources.xml")) ? ".." : ".";
 	gLawnApp->Init();
 	gLawnApp->Start();
 	gLawnApp->Shutdown();
