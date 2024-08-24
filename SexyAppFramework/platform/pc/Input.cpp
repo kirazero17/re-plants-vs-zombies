@@ -7,6 +7,22 @@
 
 using namespace Sexy;
 
+void SexyAppBase::InitInput()
+{
+	SDL_Init(SDL_INIT_EVENTS);
+}
+
+bool SexyAppBase::StartTextInput(std::string& theInput)
+{
+	SDL_StartTextInput();
+	return false;
+}
+
+void SexyAppBase::StopTextInput()
+{
+	SDL_StopTextInput();
+}
+
 bool SexyAppBase::ProcessDeferredMessages(bool singleMessage)
 {
 	SDL_Event event;

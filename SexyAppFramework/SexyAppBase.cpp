@@ -5235,6 +5235,8 @@ void SexyAppBase::Init()
 
 	InitHook();
 
+	InitInput();
+
 	mInitialized = true;
 }
 

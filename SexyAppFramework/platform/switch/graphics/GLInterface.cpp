@@ -1448,7 +1448,6 @@ int GLInterface::Init(bool IsWindowed)
 	mBlueMask = (0xFFU << mBlueShift);
 
 	SetVideoOnlyDraw(false);
-	UpdateViewport();
 
 	return 1;
 }

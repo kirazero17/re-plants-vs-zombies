@@ -15,7 +15,7 @@ void SexyAppBase::MakeWindow()
 	}
 	else
 	{
-		SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+		SDL_Init(SDL_INIT_VIDEO);
 
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);

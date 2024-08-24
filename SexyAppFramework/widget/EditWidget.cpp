@@ -6,8 +6,6 @@
 #include "EditListener.h"
 #include "../../Resources.h" // bad
 
-#include <SDL.h>
-
 using namespace Sexy;
 
 static int gEditWidgetColors[][3] = 
@@ -198,10 +196,14 @@ void EditWidget::GotFocus()
 	}
 	*/
 
-	SDL_StartTextInput();
 	mShowingCursor = true;
 	mBlinkAcc = 0;
-	MarkDirty();	
+	MarkDirty();
+
+	std::string value;
+	bool wrote = mWidgetManager->mApp->StartTextInput(value);
+	if (wrote)
+		SetText(value);
 }
 
 void EditWidget::LostFocus()
@@ -216,7 +218,7 @@ void EditWidget::LostFocus()
 	}
 	*/
 
-	SDL_StopTextInput();
+	mWidgetManager->mApp->StopTextInput();
 	mShowingCursor = false;	
 	MarkDirty();
 }

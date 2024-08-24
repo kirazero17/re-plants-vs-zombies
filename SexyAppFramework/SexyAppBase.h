@@ -499,6 +499,9 @@ public:
 	virtual bool			DebugKeyDown(int theKey);
 //	virtual bool			DebugKeyDownAsync(int theKey, bool ctrlDown, bool altDown);
 	virtual void			CloseRequestAsync();
+	void					InitInput();
+	bool					StartTextInput(std::string& theInput); // set theInput and return true if using soft keyboard capability and user pressed OK (e.g. Switch libnx swkbd)
+	void					StopTextInput();
 	bool					Is3DAccelerated();
 	bool					Is3DAccelerationSupported();
 	bool					Is3DAccelerationRecommended();
