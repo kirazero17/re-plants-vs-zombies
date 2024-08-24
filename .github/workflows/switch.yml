@@ -11,10 +11,10 @@ jobs:
 
       - name: Run CMake and compile
         run: |
-          source $DEVKITPRO/switchvars.sh
+          $DEVKITPRO/switchvars.sh
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-O1
+          aarch64-none-elf-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-O1
           make
 
       - name: Upload .nro artifact
