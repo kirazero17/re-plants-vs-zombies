@@ -34,6 +34,57 @@ PakInterface::~PakInterface()
 {
 }
 
+//0x5D84D0
+static void FixFileName(const char* theFileName, char* theUpperName)
+{
+	// 检测路径是否为从盘符开始的绝对路径
+	if ((theFileName[0] != 0) && (theFileName[1] == ':'))
+	{
+		char aDir[256];
+		getcwd(aDir, 256);  // 取得当前工作路径
+		int aLen = strlen(aDir);
+		aDir[aLen++] = '/';
+		aDir[aLen] = 0;
+
+		// 判断 theFileName 文件是否位于当前目录下
+		if (strncasecmp(aDir, theFileName, aLen) == 0)
+			theFileName += aLen;  // 若是，则跳过从盘符到当前目录的部分，转化为相对路径
+	}
+
+	bool lastSlash = false;
+	const char* aSrc = theFileName;
+	char* aDest = theUpperName;
+
+	for (;;)
+	{
+		char c = *(aSrc++);
+
+		if ((c == '\\') || (c == '/'))
+		{
+			// 统一转为右斜杠，且多个斜杠的情况下只保留一个
+			if (!lastSlash)
+				*(aDest++) = '/';
+			lastSlash = true;
+		}
+		else if ((c == '.') && (lastSlash) && (*aSrc == '.'))
+		{
+			// We have a '/..' on our hands
+			aDest--;
+			while ((aDest > theUpperName + 1) && (*(aDest-1) != '\\'))  // 回退到上一层目录
+				--aDest;
+			aSrc++;
+			// 此处将形如“a\b\..\c”的路径简化为“a\c”
+		}
+		else
+		{
+			*(aDest++) = toupper((uchar) c);
+			if (c == 0)
+				break;
+			lastSlash = false;				
+		}
+	}
+}
+
 bool PakInterface::AddPakFile(const std::string& theFileName)
 {
 	/*
@@ -139,10 +190,13 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 				aName[i] = '/'; // lol
 		}
 
+		char anUpperName[256];
+		FixFileName(aName, anUpperName);
+
 		PakRecordMap::iterator aRecordItr = mPakRecordMap.insert(PakRecordMap::value_type(StringToUpper(aName), PakRecord())).first;
 		PakRecord* aPakRecord = &(aRecordItr->second);
 		aPakRecord->mCollection = aPakCollection;
-		aPakRecord->mFileName = aName;
+		aPakRecord->mFileName = anUpperName;
 		aPakRecord->mStartPos = aPos;
 		aPakRecord->mSize = aSrcSize;
 		aPakRecord->mFileTime = aFileTime;
@@ -165,57 +219,6 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 	FClose(aFP);
 
 	return true;
-}
-
-//0x5D84D0
-static void FixFileName(const char* theFileName, char* theUpperName)
-{
-	// 检测路径是否为从盘符开始的绝对路径
-	if ((theFileName[0] != 0) && (theFileName[1] == ':'))
-	{
-		char aDir[256];
-		getcwd(aDir, 256);  // 取得当前工作路径
-		int aLen = strlen(aDir);
-		aDir[aLen++] = '/';
-		aDir[aLen] = 0;
-
-		// 判断 theFileName 文件是否位于当前目录下
-		if (strncasecmp(aDir, theFileName, aLen) == 0)
-			theFileName += aLen;  // 若是，则跳过从盘符到当前目录的部分，转化为相对路径
-	}
-
-	bool lastSlash = false;
-	const char* aSrc = theFileName;
-	char* aDest = theUpperName;
-
-	for (;;)
-	{
-		char c = *(aSrc++);
-
-		if ((c == '\\') || (c == '/'))
-		{
-			// 统一转为右斜杠，且多个斜杠的情况下只保留一个
-			if (!lastSlash)
-				*(aDest++) = '/';
-			lastSlash = true;
-		}
-		else if ((c == '.') && (lastSlash) && (*aSrc == '.'))
-		{
-			// We have a '/..' on our hands
-			aDest--;
-			while ((aDest > theUpperName + 1) && (*(aDest-1) != '\\'))  // 回退到上一层目录
-				--aDest;
-			aSrc++;
-			// 此处将形如“a\b\..\c”的路径简化为“a\c”
-		}
-		else
-		{
-			*(aDest++) = toupper((uchar) c);
-			if (c == 0)
-				break;
-			lastSlash = false;				
-		}
-	}
 }
 
 //0x5D85C0
