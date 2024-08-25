@@ -663,7 +663,7 @@ bool DefinitionIsCompiled(const SexyString& theXMLFilePath)
     }
     time_t aXMLFileTime = attr.st_mtime;
 
-    return aXMLFileTime < aCompiledFileTime;
+    return aXMLFileTime <= aCompiledFileTime;
 
     /*
     _WIN32_FILE_ATTRIBUTE_DATA lpFileData;
