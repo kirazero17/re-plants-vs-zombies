@@ -7,11 +7,11 @@ Fork of Patoke's PVZ GOTY decompilation with the following objectives:
 - [x] Replace DirectSound/BASS/FMod with [SDL Mixer X](https://github.com/WohlSoft/SDL-Mixer-X)
   * This project uses a fork of SDL Mixer X that adds compatibility with the MO3 format by using libopenmpt. This fork is located under SexyAppFramework/sound/SDL-Mixer-X
 * Port the game to some videogame consoles:
-  - [x] Nintendo Switch
-    * Atrocious loading times
-    * Couldn't get past 'Start Adventure' on Ryujinx and yuzu, not sure if it works on real hardware
-  - [ ] Nintendo 3DS
-    * Not started yet, might not have enough memory for Old 3DS, might barely work on New 3DS
+
+| Console         | Notes                                                                                                                   |
+|-----------------|-------------------------------------------------------------------------------------------------------------------------|
+| Nintendo Switch | Atrocious loading times, Couldn't get past "Start Adventure" on Ryujinx and yuzu, not sure if it works on real hardware |
+| Nintendo 3DS    | Not started yet, might not have enough memory for Old 3DS, might barely work on New 3DS                                 |
 
 Original README continues below
 
