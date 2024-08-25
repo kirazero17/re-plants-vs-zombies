@@ -572,16 +572,16 @@ bool DefinitionReadCompiledFile(const SexyString& theCompiledFilePath, DefMap* t
 {
     PerfTimer aTimer;
     aTimer.Start();
-    PFILE* pFile = p_fopen(theCompiledFilePath.c_str(), __S("rb"));
+    FILE* pFile = fopen(theCompiledFilePath.c_str(), "rb");
     if (!pFile) return false;
 
-    p_fseek(pFile, 0, 2);  // 将读取位置的指针移动至文件末尾
-    size_t aCompressedSize = p_ftell(pFile);  // 此时获取到的偏移量即为整个文件的大小
-    p_fseek(pFile, 0, 0);  // 再把读取位置的指针移回文件开头
+    fseek(pFile, 0, 2);  // 将读取位置的指针移动至文件末尾
+    size_t aCompressedSize = ftell(pFile);  // 此时获取到的偏移量即为整个文件的大小
+    fseek(pFile, 0, 0);  // 再把读取位置的指针移回文件开头
     void* aCompressedBuffer = DefinitionAlloc(aCompressedSize);
     // 读取文件，并判断实际读取的大小是否为完整的文件大小，若不等则判断为读取失败
-    bool aReadCompressedFailed = p_fread(aCompressedBuffer, sizeof(char), aCompressedSize, pFile) != aCompressedSize;
-    p_fclose(pFile);  // 关闭资源文件流并释放 pFile 占用的内存
+    bool aReadCompressedFailed = fread(aCompressedBuffer, sizeof(char), aCompressedSize, pFile) != aCompressedSize;
+    fclose(pFile);  // 关闭资源文件流并释放 pFile 占用的内存
     if (aReadCompressedFailed) { // 判断是否读取成功
         TodTrace(__S("Failed to read compiled file: %s\n"), theCompiledFilePath.c_str());
         free(aCompressedBuffer);
