@@ -10,7 +10,8 @@ Fork of Patoke's PVZ GOTY decompilation with the following objectives:
   - [x] Nintendo Switch
     * Atrocious loading times
     * Couldn't get past 'Start Adventure' on Ryujinx and yuzu, not sure if it works on real hardware
-  * Nintendo 3DS: Not started yet, might not have enough memory for Old 3DS, might barely work on New 3DS
+  - [ ] Nintendo 3DS
+    * Not started yet, might not have enough memory for Old 3DS, might barely work on New 3DS
 
 Original README continues below
 
