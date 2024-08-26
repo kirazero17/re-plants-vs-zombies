@@ -67,7 +67,7 @@ bool SexyAppBase::ProcessDeferredMessages(bool singleMessage)
 
 	HidTouchScreenState state = {0};
 	hidGetTouchScreenStates(&state, 1);
-	int x=0, y=0;
+	static int x=0, y=0;
 	if (state.count)
 	{
 		mLastUserInputTick = mLastTimerTime;
