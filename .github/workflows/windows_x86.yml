@@ -31,7 +31,7 @@ jobs:
 
       - name: Compile
         run: |
-          cmake -G Ninja -B build
+          cmake -DCMAKE_BUILD_TYPE=Release -G Ninja -B build
           cmake --build build
 
       - name: Upload .exe artifact
