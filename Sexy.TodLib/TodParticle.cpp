@@ -194,10 +194,6 @@ void TodParticleLoadDefinitions(ParticleParams* theParticleParamArray, int thePa
 
 	for (int i = 0; i < gParticleParamArraySize; i++)
 	{
-#ifdef __SWITCH__
-		if (i == 104) continue; // skip credits fog (TEMPORARY) (crash at DefinitionReadField on Switch)
-#endif
-
 		ParticleParams& aParticleParams = gParticleParamArray[i];
 		TOD_ASSERT(aParticleParams.mParticleEffect == i);
 		if (!TodParticleLoadADef(&gParticleDefArray[i], aParticleParams.mParticleFileName))
