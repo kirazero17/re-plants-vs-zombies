@@ -1,6 +1,7 @@
 #include "TitleScreen.h"
 #include "widget/HyperlinkWidget.h"
 #include "widget/WidgetManager.h"
+#include "graphics/ImageFont.h"
 #include "../../LawnApp.h"
 #include "../../Resources.h"
 #include "../../Sexy.TodLib/TodCommon.h"
@@ -51,6 +52,13 @@ TitleScreen::~TitleScreen()
 	{
 		delete mStartButton;
 	}
+
+	// free memory used by title screen since we won't see it again
+	// (this is a garbage way of going about it but i don't see another way)
+	_Font* font = FONT_BRIANNETOD16->Duplicate();
+	mApp->mResourceManager->DeleteResources("LoaderBar");
+	FONT_BRIANNETOD16 = font;
+	((ImageFont*)font)->mFontData->DeRef();
 }
 
 void TitleScreen::DrawToPreload(Graphics* g)
