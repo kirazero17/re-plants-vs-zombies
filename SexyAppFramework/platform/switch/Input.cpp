@@ -1,4 +1,5 @@
 #include <switch.h>
+#include <unordered_map>
 
 #include "SexyAppBase.h"
 #include "graphics/GLInterface.h"
@@ -8,6 +9,13 @@
 using namespace Sexy;
 
 static PadState pad;
+static std::unordered_map<u64, KeyCode> keyMaps = {
+	{HidNpadButton_Plus,  KEYCODE_ESCAPE},
+	{HidNpadButton_Minus, KEYCODE_SPACE},
+	{HidNpadButton_A,     KEYCODE_RETURN},
+	{HidNpadButton_L,     KEYCODE_LBUTTON},
+	{HidNpadButton_R,     KEYCODE_RBUTTON},
+};
 
 void SexyAppBase::InitInput()
 {
@@ -64,6 +72,31 @@ bool SexyAppBase::ProcessDeferredMessages(bool singleMessage)
 
 	// Scan the gamepad. This should be done once for each frame
 	padUpdate(&pad);
+
+	u64 kDown = padGetButtonsDown(&pad);
+	u64 kUp = padGetButtonsUp(&pad);
+
+	if (kDown)
+	{
+		mLastUserInputTick = mLastTimerTime;
+
+		for (auto& k : keyMaps)
+		{
+			if (kDown & k.first)
+				mWidgetManager->KeyDown(k.second);
+		}
+	}
+
+	if (kUp)
+	{
+		mLastUserInputTick = mLastTimerTime;
+
+		for (auto& k : keyMaps)
+		{
+			if (kDown & k.first)
+				mWidgetManager->KeyUp(k.second);
+		}
+	}
 
 	HidTouchScreenState state = {0};
 	hidGetTouchScreenStates(&state, 1);
