@@ -27,16 +27,19 @@ list(REMOVE_ITEM SOURCES
 )
 
 set(NO_GLEW OFF)
-set(USE_EGL OFF)
-set(USE_GLES OFF)
 if(NINTENDO_SWITCH)
 	set(NO_GLEW ON)
-	set(USE_EGL ON)
-	set(USE_GLES ON)
 	list(APPEND SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/switch/graphics/Window.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/switch/graphics/GLInterface.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/switch/Input.cpp
+	)
+elseif(NINTENDO_3DS)
+	set(NO_GLEW ON)
+	list(APPEND SOURCES
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/3ds/graphics/Window.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/3ds/graphics/GLInterface.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/3ds/Input.cpp
 	)
 else()
 	list(APPEND SOURCES
@@ -77,12 +80,6 @@ target_compile_definitions(re-plants-vs-zombies PRIVATE _DEBUG)
 if (NO_GLEW)
 	target_compile_definitions(re-plants-vs-zombies PRIVATE NO_GLEW)
 endif()
-if (USE_EGL)
-	target_compile_definitions(re-plants-vs-zombies PRIVATE USE_EGL)
-endif()
-if (USE_GLES)
-	target_compile_definitions(re-plants-vs-zombies PRIVATE USE_GLES)
-endif()
 
 target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer_ext_Static openmpt mpg123 vorbisfile vorbis ogg ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
 
@@ -107,6 +104,8 @@ elseif (NINTENDO_SWITCH)
 		NACP re-plants-vs-zombies.nacp
 		ICON ${CMAKE_CURRENT_SOURCE_DIR}/icon-switch.jpg
 	)
+elseif (NINTENDO_3DS)
+	#target_link_libraries(re-plants-vs-zombies citro3d ctru)
 else()
 	target_link_libraries(re-plants-vs-zombies GL)
 endif()
