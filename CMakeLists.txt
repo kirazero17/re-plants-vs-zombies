@@ -34,6 +34,9 @@ if(NINTENDO_SWITCH)
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/switch/graphics/GLInterface.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/switch/Input.cpp
 	)
+	list(APPEND PLAT_INCLUDES
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/switch
+	)
 elseif(NINTENDO_3DS)
 	set(NO_GLEW ON)
 	list(APPEND SOURCES
@@ -41,11 +44,17 @@ elseif(NINTENDO_3DS)
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/3ds/graphics/GLInterface.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/3ds/Input.cpp
 	)
+	list(APPEND PLAT_INCLUDES
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/3ds
+	)
 else()
 	list(APPEND SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/pc/graphics/Window.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/pc/graphics/GLInterface.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/pc/Input.cpp
+	)
+	list(APPEND PLAT_INCLUDES
+		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/pc
 	)
 endif()
 
@@ -74,6 +83,7 @@ target_include_directories(re-plants-vs-zombies PRIVATE
 	${PROJECT_SOURCE_DIR}/SexyAppFramework
 	${PROJECT_SOURCE_DIR}/SexyAppFramework/sound/SDL-Mixer-X/include
 	${SDL2_INCLUDE_DIRS}
+	${PLAT_INCLUDES}
 )
 target_compile_definitions(re-plants-vs-zombies PRIVATE _DEBUG)
 

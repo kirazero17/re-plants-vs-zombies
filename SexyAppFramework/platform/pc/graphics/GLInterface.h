@@ -2,9 +2,9 @@
 #define __GLINTERFACE_H__
 
 #include "Common.h"
-#include "MemoryImage.h"
+#include "graphics/MemoryImage.h"
 #include "misc/CritSect.h"
-#include "NativeDisplay.h"
+#include "graphics/NativeDisplay.h"
 #include "misc/Rect.h"
 #include "misc/Ratio.h"
 #include "misc/SexyMatrix.h"

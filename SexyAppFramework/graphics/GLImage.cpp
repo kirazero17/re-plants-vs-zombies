@@ -1,7 +1,7 @@
 #include "GLImage.h"
 #include "misc/CritSect.h"
 #include "misc/Debug.h"
-#include "GLInterface.h"
+#include "graphics/GLInterface.h"
 #include "SexyAppBase.h"
 #include "Image.h"
 

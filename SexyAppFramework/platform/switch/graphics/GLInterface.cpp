@@ -445,7 +445,7 @@ static void CopyImageToTexturePalette8(MemoryImage *theImage, int offx, int offy
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static void CopyImageToTexture(GLuint& theTexture, MemoryImage *theImage, int offx, int offy, int texWidth, int texHeight, PixelFormat theFormat, bool create)
+static void CopyImageToTexture(MemoryImage *theImage, int offx, int offy, int texWidth, int texHeight, PixelFormat theFormat, bool create)
 {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (gLinearFilter) ? GL_LINEAR : GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (gLinearFilter) ? GL_LINEAR : GL_NEAREST);
@@ -763,7 +763,7 @@ void TextureData::CreateTextures(MemoryImage *theImage)
 			}
 			glBindTexture(GL_TEXTURE_2D, aPiece.mTexture);
 
-			CopyImageToTexture(aPiece.mTexture,theImage,x,y,aPiece.mWidth,aPiece.mHeight,aFormat, createTextures);
+			CopyImageToTexture(theImage,x,y,aPiece.mWidth,aPiece.mHeight,aFormat, createTextures);
 		}
 	}
 
