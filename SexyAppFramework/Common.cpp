@@ -12,6 +12,8 @@
 
 #ifdef __SWITCH__
 #include <switch.h>
+#elifdef __3DS__
+#include <3ds.h>
 #endif
 
 #include "misc/PerfTimer.h"
@@ -37,7 +39,7 @@ void Sexy::PrintF(const char *text, ...)
 	vsnprintf(str, sizeof(str), text, args);
 	va_end(args);
 
-#ifdef __SWITCH__
+#if defined(__SWITCH__) || defined(__3DS__)
 	svcOutputDebugString(str, sizeof(str));
 #else
 	fprintf(stdout, "%s", str);

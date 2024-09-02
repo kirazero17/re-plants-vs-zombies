@@ -1,3 +1,5 @@
+#include <3ds.h>
+
 #include "graphics/GLInterface.h"
 #include "graphics/GLImage.h"
 #include "SexyAppBase.h"
@@ -30,40 +32,45 @@ static bool gLinearFilter = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+
+static C3D_Mtx projection;
+
+struct Shader {
+	DVLB_s* dvlb;
+	shaderProgram_s program;
+	int uf_projection;
+};
+static Shader* currShader;
+static Shader shaders[2];
+static C3D_RenderTarget* bottomTarget;
+
 static GLVertex* gVertices;
 static int gNumVertices;
-static GLenum gVertexMode;
-static GLuint gProgram;
-static GLuint gVao, gVbo;
-static GLint gUfViewMtx, gUfProjMtx, gUfTexture, gUfUseTexture;
+static int gVertexMode;
 
-static void GfxBegin(GLenum vertexMode)
+static void GfxBegin(int vertexMode)
 {
-	if (gVertexMode != (GLenum)-1) return;
+	if (gVertexMode != -1) return;
 	gVertexMode = vertexMode;
 }
 
 static void GfxEnd()
 {
-	if (gVertexMode == (GLenum)-1) return;
+	if (gVertexMode == -1) return;
 
-	glBindVertexArray(gVao);
-	glBindBuffer(GL_ARRAY_BUFFER, gVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLVertex) * gNumVertices, gVertices, GL_DYNAMIC_DRAW);
+	C3D_DrawArrays((GPU_Primitive_t)gVertexMode, 0, gNumVertices);
 
-	glDrawArrays(gVertexMode, 0, gNumVertices);
-
-	gVertexMode = (GLenum)-1;
+	gVertexMode = -1;
 	gNumVertices = 0;
 }
 
 static void GfxAddVertices(const GLVertex *arr, int arrCount)
 {
-	if (gVertexMode == (GLenum)-1) return;
+	if (gVertexMode == -1) return;
 
 	if (gNumVertices + arrCount >= MAX_VERTICES)
 	{
-		GLenum oldMode = gVertexMode;
+		int oldMode = gVertexMode;
 		GfxEnd();
 		GfxBegin(oldMode);
 	}
@@ -77,11 +84,11 @@ static void GfxAddVertices(const GLVertex *arr, int arrCount)
 
 static void GfxAddVertices(VertexList &arr)
 {
-	if (gVertexMode == (GLenum)-1) return;
+	if (gVertexMode == -1) return;
 
 	if (gNumVertices + arr.size() >= MAX_VERTICES)
 	{
-		GLenum oldMode = gVertexMode;
+		int oldMode = gVertexMode;
 		GfxEnd();
 		GfxBegin(oldMode);
 	}
@@ -95,11 +102,11 @@ static void GfxAddVertices(VertexList &arr)
 
 static void GfxAddVertices(const TriVertex arr[][3], int arrCount, unsigned int theColor, float tx, float ty, float aMaxTotalU, float aMaxTotalV)
 {
-	if (gVertexMode == (GLenum)-1) return;
+	if (gVertexMode == -1) return;
 
 	if (gNumVertices + arrCount*3 >= MAX_VERTICES)
 	{
-		GLenum oldMode = gVertexMode;
+		int oldMode = gVertexMode;
 		GfxEnd();
 		GfxBegin(oldMode);
 	}
@@ -121,102 +128,158 @@ static void GfxAddVertices(const TriVertex arr[][3], int arrCount, unsigned int 
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-static const char *TEXTURED_SHADER =
-"\n #ifdef FRAGMENT"
-"\n precision mediump float;"
-"\n #endif"
-"\n "
-"\n varying vec4 v_color;"
-"\n varying vec2 v_uv;"
-"\n "
-"\n #ifdef VERTEX"
-"\n "
-"\n     uniform mat4 view;"
-"\n     uniform mat4 projection;"
-"\n "
-"\n     attribute vec3 position;"
-"\n     attribute vec4 color;"
-"\n     attribute vec2 uv;"
-"\n "
-"\n     void main()"
-"\n     {"
-"\n         v_color = color;"
-"\n         v_uv = uv;"
-"\n "
-"\n         gl_Position = projection * view * vec4( position, 1. );"
-"\n     }"
-"\n "
-"\n #endif"
-"\n #ifdef FRAGMENT"
-"\n "
-"\n     uniform sampler2D TextureSamp;"
-"\n     uniform int UseTexture;"
-"\n "
-"\n     void main() "
-"\n     {"
-"\n         if (UseTexture == 1)"
-"\n             gl_FragColor = texture2D(TextureSamp, v_uv) * v_color;"
-"\n         else"
-"\n             gl_FragColor = v_color;"
-"\n     }"
-"\n "
-"\n #endif";
-
-static GLuint shaderCompile(const char *shaderStr, uint32_t shaderStrLen, GLenum shaderType)
+static void SetTexture(C3D_Tex *theTex)
 {
-	const GLchar *shaderDefine = (shaderType == GL_VERTEX_SHADER)
-		? "\n#version 150\n#define VERTEX  \n#define v2f out\n"
-		: "\n#version 150\n#define FRAGMENT\n#define v2f in\n";
+	Shader* oldShader = currShader;
 
-	const GLchar *shaderStrings[2] = {shaderDefine, shaderStr};
-	GLint shaderStringLengths[2] = {(GLint)strlen(shaderDefine), (GLint)shaderStrLen};
-
-	GLuint shader = glCreateShader(shaderType);
-	glShaderSource(shader, 2, shaderStrings, shaderStringLengths);
-	glCompileShader(shader);
-
-	GLint isCompiled;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-	if (!isCompiled)
+	if (!theTex)
+		currShader = &shaders[0];
+	else
 	{
-		GLint maxLength;
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-		char *log = (char*)malloc(maxLength);
-		glGetShaderInfoLog(shader, maxLength, &maxLength, log);
-
-		printf("Error in shader: %s\n%s\n%s\n", log, shaderStrings[0], shaderStrings[1]);
-		fflush(stdout);
-		exit(1);
+		currShader = &shaders[1];
+		C3D_TexBind(0, theTex);
 	}
 
-	return shader;
+	if (oldShader != currShader)
+	{
+		C3D_BindProgram(&currShader->program);
+
+		// Configure attributes for use with the vertex shader
+		C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
+		AttrInfo_Init(attrInfo);
+		AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 3); // v0=position
+		AttrInfo_AddLoader(attrInfo, 1, GPU_UNSIGNED_BYTE, 4); // v1=color
+		if (theTex) AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 2); // v2=texcoord0
+
+		// Configure buffers
+		C3D_BufInfo* bufInfo = C3D_GetBufInfo();
+		BufInfo_Init(bufInfo);
+		if (!theTex)
+			BufInfo_Add(bufInfo, gVertices, sizeof(GLVertex), 2, 0x10);
+		else
+			BufInfo_Add(bufInfo, gVertices, sizeof(GLVertex), 3, 0x210);
+
+		C3D_TexEnv* env = C3D_GetTexEnv(0);
+		C3D_TexEnvInit(env);
+		if (!theTex)
+		{
+			// Configure the first fragment shading substage to just pass through the vertex color
+			// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
+			C3D_TexEnvSrc(env, C3D_Both, GPU_PRIMARY_COLOR, (GPU_TEVSRC)0, (GPU_TEVSRC)0);
+			C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+		}
+		else
+		{
+			// Configure the first fragment shading substage to blend the texture color with
+			// the vertex color (calculated by the vertex shader using a lighting algorithm)
+			// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
+			C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, (GPU_TEVSRC)0);
+			C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+		}
+	}
 }
 
-static GLuint shaderLoad(const char *shaderContents)
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+static inline u32 CalcZOrder(u32 a)
 {
-    GLuint vert = shaderCompile(shaderContents, strlen(shaderContents), GL_VERTEX_SHADER);
-    GLuint frag = shaderCompile(shaderContents, strlen(shaderContents), GL_FRAGMENT_SHADER);
-
-    GLuint ref = glCreateProgram();
-    glAttachShader(ref, vert);
-    glAttachShader(ref, frag);
-
-    const char *attribs[] = {"position", "color", "uv"};
-    for (int i=0; i<3; i++)
-        glBindAttribLocation(ref, i, attribs[i]);
-
-    glLinkProgram(ref);
-    glDetachShader(ref, vert);
-    glDetachShader(ref, frag);
-
-    return ref;
+	// Simplified "Interleave bits by Binary Magic Numbers" from
+	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
+	a = (a | (a << 2)) & 0x33;
+	a = (a | (a << 1)) & 0x55;
+	return a;
+	// equivalent to return (a & 1) | ((a & 2) << 1) | (a & 4) << 2;
+	//  but compiles to less instructions
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-static void CopyImageToTexture8888(MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
+// Pixels are arranged in a recursive Z-order curve / Morton offset
+// They are arranged into 8x8 tiles, where each 8x8 tile is composed of
+//  four 4x4 subtiles, which are in turn composed of four 2x2 subtiles
+static void ToMortonTexture32(C3D_Tex* tex, u32* dst, u32* src, int originX, int originY, int width, int height)
+{
+	u32 pixel;
+	unsigned int mortonX, mortonY;
+	unsigned int dstX, dstY, tileX, tileY;
+
+	for (int y = 0; y < height; y++)
+	{
+		dstY    = tex->height - 1 - (y + originY);
+		tileY   = dstY & ~0x07;
+		mortonY = CalcZOrder(dstY & 0x07) << 1;
+
+		for (int x = 0; x < width; x++)
+		{
+			dstX    = x + originX;
+			tileX   = dstX & ~0x07;
+			mortonX = CalcZOrder(dstX & 0x07);
+			pixel   = src[x + (y * width)];
+
+			u8 r = pixel & 0xff;
+			u8 g = (pixel >> 8) & 0xff;
+			u8 b = (pixel >> 16) & 0xff;
+			u8 a = (pixel >> 24) & 0xff;
+			pixel = (a<<0) | (b<<8) | (g<<16) | (r<<24);
+
+			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * tex->width)] = pixel;
+		}
+	}
+}
+
+static void ToMortonTexture16(C3D_Tex* tex, u16* dst, u16* src, int originX, int originY, int width, int height)
+{
+	u16 pixel;
+	unsigned int mortonX, mortonY;
+	unsigned int dstX, dstY, tileX, tileY;
+
+	for (int y = 0; y < height; y++)
+	{
+		dstY    = tex->height - 1 - (y + originY);
+		tileY   = dstY & ~0x07;
+		mortonY = CalcZOrder(dstY & 0x07) << 1;
+
+		for (int x = 0; x < width; x++)
+		{
+			dstX    = x + originX;
+			tileX   = dstX & ~0x07;
+			mortonX = CalcZOrder(dstX & 0x07);
+			pixel   = src[x + (y * width)];
+
+			u8 r = pixel & 0xff;
+			u8 g = (pixel >> 4) & 0xff;
+			u8 b = (pixel >> 8) & 0xff;
+			u8 a = (pixel >> 12) & 0xff;
+			pixel = (a<<0) | (b<<4) | (g<<8) | (r<<12);
+
+			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * tex->width)] = pixel;
+		}
+	}
+}
+
+static void ToMortonTexture565(C3D_Tex* tex, u16* dst, u16* src, int originX, int originY, int width, int height)
+{
+	u16 pixel;
+	unsigned int mortonX, mortonY;
+	unsigned int dstX, dstY, tileX, tileY;
+
+	for (int y = 0; y < height; y++)
+	{
+		dstY    = tex->height - 1 - (y + originY);
+		tileY   = dstY & ~0x07;
+		mortonY = CalcZOrder(dstY & 0x07) << 1;
+
+		for (int x = 0; x < width; x++)
+		{
+			dstX    = x + originX;
+			tileX   = dstX & ~0x07;
+			mortonX = CalcZOrder(dstX & 0x07);
+			pixel   = src[x + (y * width)];
+
+			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * tex->width)] = pixel;
+		}
+	}
+}
+
+static void CopyImageToTexture8888(C3D_Tex *theTex, MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
 {
 	uint32_t *aDest = new uint32_t[theDestPitch * theDestHeight];
 
@@ -267,14 +330,14 @@ static void CopyImageToTexture8888(MemoryImage *theImage, int offx, int offy, in
 	}
 
 	if (create)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, theDestPitch, theDestHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, aDest);
+		ToMortonTexture32(theTex, (u32*)theTex->data, (u32*)aDest, 0, 0, theDestPitch, theDestHeight);
 	else
-		glTexSubImage2D(GL_TEXTURE_2D, 0, offx, offy, theDestPitch, theDestHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, aDest);
+		ToMortonTexture32(theTex, (u32*)theTex->data, (u32*)aDest, offx, offy, theDestPitch, theDestHeight);
 
 	delete[] aDest;
 }
 
-static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
+static void CopyImageToTexture4444(C3D_Tex *theTex, MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
 {
 	uint16_t *aDest = new uint16_t[theDestPitch * theDestHeight];
 
@@ -331,14 +394,14 @@ static void CopyImageToTexture4444(MemoryImage *theImage, int offx, int offy, in
 	}
 
 	if (create)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, theDestPitch, theDestHeight, 0, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV, aDest);
+		ToMortonTexture16(theTex, (u16*)theTex->data, (u16*)aDest, 0, 0, theDestPitch, theDestHeight);
 	else
-		glTexSubImage2D(GL_TEXTURE_2D, 0, offx, offy, theDestPitch, theDestHeight, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV, aDest);
+		ToMortonTexture16(theTex, (u16*)theTex->data, (u16*)aDest, offx, offy, theDestPitch, theDestHeight);
 
 	delete[] aDest;
 }
 
-static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
+static void CopyImageToTexture565(C3D_Tex *theTex, MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
 {
 	uint16_t *aDest = new uint16_t[theDestPitch * theDestHeight];
 
@@ -395,14 +458,14 @@ static void CopyImageToTexture565(MemoryImage *theImage, int offx, int offy, int
 	}
 
 	if (create)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, theDestPitch, theDestHeight, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, aDest);
+		ToMortonTexture565(theTex, (u16*)theTex->data, (u16*)aDest, 0, 0, theDestPitch, theDestHeight);
 	else
-		glTexSubImage2D(GL_TEXTURE_2D, 0, offx, offy, theDestPitch, theDestHeight, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, aDest);
+		ToMortonTexture565(theTex, (u16*)theTex->data, (u16*)aDest, offx, offy, theDestPitch, theDestHeight);
 
 	delete[] aDest;
 }
 
-static void CopyImageToTexturePalette8(MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
+static void CopyImageToTexturePalette8(C3D_Tex *theTex, MemoryImage *theImage, int offx, int offy, int theWidth, int theHeight, int theDestPitch, int theDestHeight, bool rightPad, bool bottomPad, bool create)
 {
 	printf("PALETTE %d %d - %d %d - %d %d\n", offx, offy, theWidth, theHeight, theDestPitch, theDestHeight);
 	fflush(stdout);
@@ -437,22 +500,20 @@ static void CopyImageToTexturePalette8(MemoryImage *theImage, int offx, int offy
 	}
 
 	if (create)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, theDestPitch, theDestHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, aDest);
+		ToMortonTexture32(theTex, (u32*)theTex->data, (u32*)aDest, 0, 0, theDestPitch, theDestHeight);
 	else
-		glTexSubImage2D(GL_TEXTURE_2D, 0, offx, offy, theDestPitch, theDestHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, aDest);
+		ToMortonTexture32(theTex, (u32*)theTex->data, (u32*)aDest, offx, offy, theDestPitch, theDestHeight);
 
 	delete[] aDest;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static void CopyImageToTexture(MemoryImage *theImage, int offx, int offy, int texWidth, int texHeight, PixelFormat theFormat, bool create)
+static void CopyImageToTexture(C3D_Tex *theTex, MemoryImage *theImage, int offx, int offy, int texWidth, int texHeight, PixelFormat theFormat, bool create)
 {
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (gLinearFilter) ? GL_LINEAR : GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (gLinearFilter) ? GL_LINEAR : GL_NEAREST);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	GPU_TEXTURE_FILTER_PARAM filter = (gLinearFilter) ? GPU_LINEAR : GPU_NEAREST;
+	C3D_TexSetFilter(theTex, filter, filter);
+	C3D_TexSetWrap(theTex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
 
 	int aWidth = std::min(texWidth,(theImage->GetWidth()-offx));
 	int aHeight = std::min(texHeight,(theImage->GetHeight()-offy));
@@ -464,10 +525,10 @@ static void CopyImageToTexture(MemoryImage *theImage, int offx, int offy, int te
 	{
 		switch (theFormat)
 		{
-			case PixelFormat_A8R8G8B8:	CopyImageToTexture8888(theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
-			case PixelFormat_A4R4G4B4:	CopyImageToTexture4444(theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
-			case PixelFormat_R5G6B5:	CopyImageToTexture565(theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
-			case PixelFormat_Palette8:	CopyImageToTexturePalette8(theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
+			case PixelFormat_A8R8G8B8:	CopyImageToTexture8888(theTex, theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
+			case PixelFormat_A4R4G4B4:	CopyImageToTexture4444(theTex, theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
+			case PixelFormat_R5G6B5:	CopyImageToTexture565(theTex, theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
+			case PixelFormat_Palette8:	CopyImageToTexturePalette8(theTex, theImage, offx, offy, aWidth, aHeight, texWidth, texHeight, rightPad, bottomPad, create); break;
 			case PixelFormat_Unknown: break;
 		}
 	}
@@ -594,8 +655,8 @@ void TextureData::ReleaseTextures()
 {
 	for(int i=0; i<(int)mTextures.size(); i++)
 	{
-		GLuint* aSurface = &mTextures[i].mTexture;
-		glDeleteTextures(1, aSurface);
+		C3D_Tex* aSurface = &mTextures[i].mTexture;
+		C3D_TexDelete(aSurface);
 	}
 
 	mTextures.clear();
@@ -655,7 +716,6 @@ void TextureData::CreateTextureDimensions(MemoryImage *theImage)
 	for (i = 0; i < mTextures.size(); i++)
 	{
 		TextureDataPiece& aPiece = mTextures[i];
-		aPiece.mTexture = 0;
 		aPiece.mWidth = mTexPieceWidth;
 		aPiece.mHeight = mTexPieceHeight;
 	}
@@ -746,10 +806,17 @@ void TextureData::CreateTextures(MemoryImage *theImage)
 	int aWidth = theImage->GetWidth();
 
 	int aFormatSize = 4;
+	GPU_TEXCOLOR aFormatType = GPU_RGBA8;
 	if (aFormat==PixelFormat_R5G6B5)
+	{
 		aFormatSize = 2;
+		aFormatType = GPU_RGB565;
+	}
 	else if (aFormat==PixelFormat_A4R4G4B4)
+	{
 		aFormatSize = 2;
+		aFormatType = GPU_RGBA4;
+	}
 
 	i=0;
 	for(y=0; y<aHeight; y+=mTexPieceHeight)
@@ -759,12 +826,11 @@ void TextureData::CreateTextures(MemoryImage *theImage)
 			TextureDataPiece &aPiece = mTextures[i];
 			if (createTextures)
 			{
-				glGenTextures(1, &aPiece.mTexture);
+				C3D_TexInit(&aPiece.mTexture, aPiece.mWidth, aPiece.mHeight, aFormatType);
 				mTexMemSize += aPiece.mWidth*aPiece.mHeight*aFormatSize;
 			}
-			glBindTexture(GL_TEXTURE_2D, aPiece.mTexture);
 
-			CopyImageToTexture(theImage,x,y,aPiece.mWidth,aPiece.mHeight,aFormat, createTextures);
+			CopyImageToTexture(&aPiece.mTexture, theImage,x,y,aPiece.mWidth,aPiece.mHeight,aFormat, createTextures);
 		}
 	}
 
@@ -784,7 +850,7 @@ void TextureData::CheckCreateTextures(MemoryImage *theImage)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-GLuint& TextureData::GetTexture(int x, int y, int &width, int &height, float &u1, float &v1, float &u2, float &v2)
+C3D_Tex& TextureData::GetTexture(int x, int y, int &width, int &height, float &u1, float &v1, float &u2, float &v2)
 {
 	int tx = x/mTexPieceWidth;
 	int ty = y/mTexPieceHeight;
@@ -815,7 +881,7 @@ GLuint& TextureData::GetTexture(int x, int y, int &width, int &height, float &u1
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-GLuint& TextureData::GetTextureF(float x, float y, float &width, float &height, float &u1, float &v1, float &u2, float &v2)
+C3D_Tex& TextureData::GetTextureF(float x, float y, float &width, float &height, float &u1, float &v1, float &u2, float &v2)
 {
 	int tx = x/mTexPieceWidth;
 	int ty = y/mTexPieceHeight;
@@ -850,11 +916,6 @@ static void SetLinearFilter(bool linear)
 {
 	if (gLinearFilter != linear)
 	{
-		int aFilter = (linear) ? GL_LINEAR : GL_NEAREST;
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, aFilter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, aFilter);
-
 		gLinearFilter = linear;
 	}
 }
@@ -880,10 +941,6 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
 
-	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(gUfUseTexture, 1);
-
 	while(srcY < srcBottom)
 	{
 		srcX = srcLeft;
@@ -892,7 +949,7 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 		{
 			aWidth = srcRight-srcX;
 			aHeight = srcBottom-srcY;
-			GLuint& aTexture = GetTexture(srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
+			C3D_Tex& aTexture = GetTexture(srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
 
 			float x = dstX - 0.5f;
 			float y = dstY - 0.5f;
@@ -904,9 +961,9 @@ void TextureData::Blt(float theX, float theY, const Rect& theSrcRect, const Colo
 				{ {x+aWidth}, {y+aHeight}, {0},{aColor},{u2},{v2} }
 			};
 
-			glBindTexture(GL_TEXTURE_2D, aTexture);
+			SetTexture(&aTexture);
 
-			GfxBegin(GL_TRIANGLE_STRIP);
+			GfxBegin(GPU_TRIANGLE_STRIP);
 			GfxAddVertices(aVertex, 4);
 			GfxEnd();
 
@@ -1016,7 +1073,7 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 
 	if (aList.size() >= 3)
 	{
-		GfxBegin(GL_TRIANGLE_FAN);
+		GfxBegin(GPU_TRIANGLE_FAN);
 		GfxAddVertices(aList);
 		GfxEnd();
 	}
@@ -1074,10 +1131,6 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
 
-	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(gUfUseTexture, 1);
-
 	while(srcY < srcBottom)
 	{
 		srcX = srcLeft;
@@ -1086,7 +1139,7 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 		{
 			aWidth = srcRight-srcX;
 			aHeight = srcBottom-srcY;
-			GLuint& aTexture = GetTexture(srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
+			C3D_Tex& aTexture = GetTexture(srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
 
 			float x = dstX; // - 0.5f;
 			float y = dstY; // - 0.5f;
@@ -1126,11 +1179,11 @@ void TextureData::BltTransformed(const SexyMatrix3 &theTrans, const Rect& theSrc
 				{ {tp[3].x},{tp[3].y},{0},{aColor},{u2},{v2} }
 			};
 
-			glBindTexture(GL_TEXTURE_2D, aTexture);
+			SetTexture(&aTexture);
 
 			if (!clipped)
 			{
-				GfxBegin(GL_TRIANGLE_STRIP);
+				GfxBegin(GPU_TRIANGLE_STRIP);
 				GfxAddVertices(aVertex, 4);
 				GfxEnd();
 			}
@@ -1158,12 +1211,9 @@ void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTrian
 {
 	if ((mMaxTotalU <= 1.0) && (mMaxTotalV <= 1.0))
 	{
-		glEnable(GL_TEXTURE_2D);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mTextures[0].mTexture);
-		glUniform1i(gUfUseTexture, 1);
+		SetTexture(&mTextures[0].mTexture);
 
-		GfxBegin(GL_TRIANGLES);
+		GfxBegin(GPU_TRIANGLES);
 		GfxAddVertices(theVertices, theNumTriangles, theColor, tx, ty, mMaxTotalU, mMaxTotalV);
 		GfxEnd();
 	}
@@ -1241,8 +1291,8 @@ void TextureData::BltTriangles(const TriVertex theVertices[][3], int theNumTrian
 					DoPolyTextureClip(aList);
 					if (aList.size() >= 3)
 					{
-						glBindTexture(GL_TEXTURE_2D, aPiece.mTexture);
-						GfxBegin(GL_TRIANGLE_FAN);
+						SetTexture(&aPiece.mTexture);
+						GfxBegin(GPU_TRIANGLE_FAN);
 						GfxAddVertices(aList);
 						GfxEnd();
 					}
@@ -1279,9 +1329,9 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 	mCursorX = 0;
 	mCursorY = 0;
 
-	gVertexMode = (GLenum)-1;
+	gVertexMode = -1;
 	gNumVertices = 0;
-	gVertices = new GLVertex[MAX_VERTICES];
+	gVertices = (GLVertex*)linearAlloc(sizeof(GLVertex) * MAX_VERTICES);
 	memset(gVertices, 0, sizeof(GLVertex) * MAX_VERTICES);
 }
 
@@ -1304,11 +1354,11 @@ void GLInterface::SetDrawMode(int theDrawMode)
 {
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
 	{
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA);
 	}
 	else // Additive
 	{
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE, GPU_SRC_ALPHA, GPU_ONE);
 	}
 }
 
@@ -1352,8 +1402,8 @@ void GLInterface::UpdateViewport()
 
 	int viewport_x = 0;
 	int viewport_y = 0;
-	int width = 1280;
-	int height = 720;
+	int width = 320;
+	int height = 240;
 	int viewport_width = width;
 	int viewport_height = height;
 	if (width * 3 > height * 4)
@@ -1366,11 +1416,11 @@ void GLInterface::UpdateViewport()
 		viewport_height = width * 3 / 4;
 		viewport_y = (height - viewport_height) / 2;
 	}
-	glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
+	//glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
+	C3D_SetViewport(viewport_x, viewport_y, viewport_width, viewport_height);
 	mPresentationRect = Rect( viewport_x, viewport_y, viewport_width, viewport_height );
 
-	glClear(GL_COLOR_BUFFER_BIT);
-	Flush();
+	//glClear(GL_COLOR_BUFFER_BIT);
 }
 
 int GLInterface::Init(bool IsWindowed)
@@ -1380,59 +1430,48 @@ int GLInterface::Init(bool IsWindowed)
 	{
 		inited = true;
 
-		// Load OpenGL routines using glad
-		gladLoadGL();
+		// Initialize the render target
+		bottomTarget = C3D_RenderTargetCreate(240, 320, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+		C3D_RenderTargetSetOutput(bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
-		gProgram = shaderLoad(TEXTURED_SHADER);
+		u32 color = ((u8)(0*255) << 24) | ((u8)(0*255) << 16) | ((u8)(0*255) << 8) | 0xFF;
+		C3D_RenderTargetClear(bottomTarget, C3D_CLEAR_ALL, color, 0);
 
-		gUfViewMtx = glGetUniformLocation(gProgram, "view");
-		gUfProjMtx = glGetUniformLocation(gProgram, "projection");
-		gUfTexture = glGetUniformLocation(gProgram, "TextureSamp");
-		gUfUseTexture = glGetUniformLocation(gProgram, "UseTexture");
+		for (int i=0; i<2; i++)
+		{
+			u32* bin = (!i) ? (u32*)colored_shbin : (u32*)textured_shbin;
+			u32 binsize = (!i) ? colored_shbin_size : textured_shbin_size;
 
-		glGenVertexArrays(1, &gVao);
-		glGenBuffers(1, &gVbo);
+			// Load the vertex shader, create a shader program and bind it
+			shaders[i].dvlb = DVLB_ParseFile(bin, binsize);
+			shaderProgramInit(&shaders[i].program);
+			shaderProgramSetVsh(&shaders[i].program, &shaders[i].dvlb->DVLE[0]);
+			C3D_BindProgram(&shaders[i].program);
 
-		glBindVertexArray(gVao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, gVbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLVertex) * MAX_VERTICES, 0, GL_DYNAMIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLVertex), 0);
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GLVertex), (void*)(sizeof(float)*3) );
-		glEnableVertexAttribArray(1);
-
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(GLVertex), (void*)(sizeof(float)*3 + sizeof(uint32_t)) );
-		glEnableVertexAttribArray(2);
+			// Get the location of the uniform
+			shaders[i].uf_projection = shaderInstanceGetUniformLocation(shaders[i].program.vertexShader, "projection");
+		}
 	}
 
-	int aMaxSize;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &aMaxSize);
+	Mtx_OrthoTilt(&projection, 0, mWidth-1, mHeight-1, 0, -10.0f, 10.0f, true);
+	for (int i=0; i<2; i++)
+		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, shaders[i].uf_projection, &projection);
 
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+	// Use untextured shader by default
+	SetTexture(0);
 
 	gTextureSizeMustBePow2 = false;
 	gMinTextureWidth = 8;
 	gMinTextureHeight = 8;
-	gMaxTextureWidth = aMaxSize;
-	gMaxTextureHeight = aMaxSize;
+	gMaxTextureWidth = 512;
+	gMaxTextureHeight = 512;
 	gSupportedPixelFormats = PixelFormat_A8R8G8B8 | PixelFormat_A4R4G4B4 | PixelFormat_R5G6B5 | PixelFormat_Palette8;
 	gLinearFilter = false;
 
-	glUseProgram(gProgram);
-	glm::mat4 viewMtx{1.0f};
-	auto projMtx = glm::ortho<float>(0, mWidth-1, mHeight-1, 0, -10, 10);
-	glUniformMatrix4fv(gUfViewMtx, 1, GL_FALSE, glm::value_ptr(viewMtx));
-	glUniformMatrix4fv(gUfProjMtx, 1, GL_FALSE, glm::value_ptr(projMtx));
-	glUniform1i(gUfTexture, 0);
-
-	glEnable(GL_BLEND);
-	glDisable(GL_DITHER);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+	C3D_AlphaTest(true, GPU_GREATER, 0);
+	C3D_BlendingColor(0);
+	C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_ALL);
+	C3D_CullFace(GPU_CULL_NONE);
 
 	mRGBBits = 32;
 
@@ -1449,6 +1488,9 @@ int GLInterface::Init(bool IsWindowed)
 	mBlueMask = (0xFFU << mBlueShift);
 
 	SetVideoOnlyDraw(false);
+
+	C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+	C3D_FrameDrawOn(bottomTarget);
 
 	return 1;
 }
@@ -1480,15 +1522,19 @@ void GLInterface::SetCursorPos(int theCursorX, int theCursorY)
 bool GLInterface::PreDraw()
 {
 	gLinearFilter = false;
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	return true;
 }
 
 void GLInterface::Flush()
 {
-	eglSwapBuffers(mApp->mWindow, mApp->mSurface);
+	C3D_FrameEnd(0);
+	gNumVertices = 0;
+
+	C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+	C3D_FrameDrawOn(bottomTarget);
 }
 
 bool GLInterface::CreateImageTexture(MemoryImage *theImage)
@@ -1537,9 +1583,9 @@ bool GLInterface::RecoverBits(MemoryImage* theImage)
 			int aWidth = std::min(theImage->mWidth-offx, aPiece->mWidth);
 			int aHeight = std::min(theImage->mHeight-offy, aPiece->mHeight);
 
-			glEnable(GL_TEXTURE_2D);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, aPiece->mTexture);
+			//glEnable(GL_TEXTURE_2D);
+			//glActiveTexture(GL_TEXTURE0);
+			//glBindTexture(GL_TEXTURE_2D, aPiece->mTexture);
 
 			//glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, theImage->GetBits());
 
@@ -1721,16 +1767,15 @@ void GLInterface::DrawLine(double theStartX, double theStartY, double theEndX, d
 		y2 = theEndY;
 	}
 
-	glDisable(GL_TEXTURE_2D);
-	glUniform1i(gUfUseTexture, 0);
+	SetTexture(0);
 
 	GLVertex aVertex[3] = {
 		{ {x1},{y1},{0},{theColor.ToInt()},{0},{0} },
 		{ {x2},{y2},{0},{theColor.ToInt()},{0},{0} },
-		{ {x2+0.5f},{y2+0.5f},{0},{theColor.ToInt()},{0},{0} },
+		{ {x2},{y2},{0},{theColor.ToInt()},{0},{0} },
 	};
 
-	GfxBegin(GL_LINE_STRIP);
+	GfxBegin(GPU_TRIANGLES);
 	GfxAddVertices(aVertex, 3);
 	GfxEnd();
 }
@@ -1769,10 +1814,9 @@ void GLInterface::FillRect(const Rect& theRect, const Color& theColor, int theDr
 		}
 	}
 
-	glDisable(GL_TEXTURE_2D);
-	glUniform1i(gUfUseTexture, 0);
+	SetTexture(0);
 
-	GfxBegin(GL_TRIANGLE_STRIP);
+	GfxBegin(GPU_TRIANGLE_STRIP);
 	GfxAddVertices(aVertex, 4);
 	GfxEnd();
 }
@@ -1789,8 +1833,7 @@ void GLInterface::DrawTriangle(const TriVertex &p1, const TriVertex &p2, const T
 	unsigned int col2 = GetColorFromTriVertex(p1, aColor);
 	unsigned int col3 = GetColorFromTriVertex(p1, aColor);
 
-	glDisable(GL_TEXTURE_2D);
-	glUniform1i(gUfUseTexture, 0);
+	SetTexture(0);
 
 	GLVertex aVertex[3] = {
 		{ {p1.x}, {p1.y}, {0}, {col1}, {0},{0} },
@@ -1798,7 +1841,7 @@ void GLInterface::DrawTriangle(const TriVertex &p1, const TriVertex &p2, const T
 		{ {p3.x}, {p3.y}, {0}, {col3}, {0},{0} },
 	};
 
-	GfxBegin(GL_TRIANGLE_STRIP);
+	GfxBegin(GPU_TRIANGLE_STRIP);
 	GfxAddVertices(aVertex, 3);
 	GfxEnd();
 }
@@ -1857,8 +1900,7 @@ void GLInterface::FillPoly(const Point theVertices[], int theNumVertices, const 
 	SetDrawMode(theDrawMode);
 	unsigned int aColor = (theColor.mRed << 0) | (theColor.mGreen << 8) | (theColor.mBlue << 16) | (theColor.mAlpha << 24);
 
-	glDisable(GL_TEXTURE_2D);
-	glUniform1i(gUfUseTexture, 0);
+	SetTexture(0);
 
 	VertexList aList;
 	for (int i=0; i<theNumVertices; i++)
@@ -1879,7 +1921,7 @@ void GLInterface::FillPoly(const Point theVertices[], int theNumVertices, const 
 		DrawPolyClipped(theClipRect,aList);
 	else
 	{
-		GfxBegin(GL_TRIANGLE_FAN);
+		GfxBegin(GPU_TRIANGLE_FAN);
 		GfxAddVertices(aList);
 		GfxEnd();
 	}

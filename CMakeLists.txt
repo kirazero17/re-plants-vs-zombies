@@ -29,6 +29,7 @@ list(REMOVE_ITEM SOURCES
 set(NO_GLEW OFF)
 if(NINTENDO_SWITCH)
 	set(NO_GLEW ON)
+	set(VORBIS_LIBS "vorbisfile vorbis")
 	list(APPEND SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/switch/graphics/Window.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/switch/graphics/GLInterface.cpp
@@ -51,6 +52,7 @@ elseif(NINTENDO_3DS)
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/3ds
 	)
 else()
+	set(VORBIS_LIBS "vorbisfile vorbis")
 	list(APPEND SOURCES
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/pc/graphics/Window.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/SexyAppFramework/platform/pc/graphics/GLInterface.cpp
@@ -94,7 +96,7 @@ if (NO_GLEW)
 	target_compile_definitions(re-plants-vs-zombies PRIVATE NO_GLEW)
 endif()
 
-target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer_ext_Static openmpt mpg123 vorbisfile vorbis ogg ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(re-plants-vs-zombies jpeg png z SDL2_mixer_ext_Static openmpt mpg123 ${VORBIS_LIBS} ogg ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
 
 if (WIN32)
 	target_link_options(re-plants-vs-zombies PRIVATE -static -static-libgcc -static-libstdc++)
@@ -118,7 +120,19 @@ elseif (NINTENDO_SWITCH)
 		ICON ${CMAKE_CURRENT_SOURCE_DIR}/icon-switch.jpg
 	)
 elseif (NINTENDO_3DS)
-	target_link_libraries(re-plants-vs-zombies shaders)
+	target_link_libraries(re-plants-vs-zombies citro3d shaders)
+
+	ctr_generate_smdh(re-plants-vs-zombies.smdh
+		NAME "Plants vs. Zombies"
+		DESCRIPTION "GOTY Edition"
+		AUTHOR "PopCap Games, Unofficial 3DS port by Headshotnoby"
+		VERSION "0.1"
+		ICON "${CMAKE_CURRENT_SOURCE_DIR}/icon-3ds.png"
+	)
+
+	ctr_create_3dsx(re-plants-vs-zombies
+		SMDH re-plants-vs-zombies.smdh
+	)
 else()
 	target_link_libraries(re-plants-vs-zombies GL)
 endif()

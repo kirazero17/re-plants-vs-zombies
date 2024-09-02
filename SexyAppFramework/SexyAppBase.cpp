@@ -14,6 +14,8 @@
 #include <switch.h>
 #include <locale>
 #include <codecvt>
+#elifdef __3DS__
+#include <3ds.h>
 #endif
 
 #include "SexyAppBase.h"
@@ -173,6 +175,8 @@ SexyAppBase::SexyAppBase()
 
 #ifdef __SWITCH__
 	mChangeDirTo = "sdmc:/switch/PlantsvsZombies/";
+#elifdef __3DS__
+	mChangeDirTo = "sdmc:/3ds/PlantsvsZombies/";
 #else
 	mChangeDirTo = "./";
 #endif
