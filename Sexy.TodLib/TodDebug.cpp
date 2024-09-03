@@ -113,7 +113,7 @@ void TodLogString(const char* theMsg)
 	FILE* f = fopen(gLogFileName, "a");
 	if (f == nullptr)
 	{
-		fprintf(stderr, __S("Failed to open log file\n"));
+		fprintf(stderr, __S("Failed to open log file '%s'\n"), gLogFileName);
 		return;
 	}
 
@@ -212,9 +212,10 @@ void TodTraceWithoutSpamming(const char* theFormat, ...)
 
 void TodAssertInitForApp()
 {
+	MkDir(GetAppDataFolder());
 	MkDir(GetAppDataFolder() + "userdata");
 	std::string aRelativeUserPath = GetAppDataFolder() + "userdata/";
-	strcpy(gDebugDataFolder, GetFullPath(aRelativeUserPath).c_str());
+	strcpy(gDebugDataFolder, aRelativeUserPath.c_str());
 	strcpy(gLogFileName, gDebugDataFolder);
 	strcpy(gLogFileName + strlen(gLogFileName), "log.txt");
 	TOD_ASSERT(strlen(gLogFileName) < 512);
