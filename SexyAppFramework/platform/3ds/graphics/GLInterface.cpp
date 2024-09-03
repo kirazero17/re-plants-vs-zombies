@@ -1554,7 +1554,16 @@ bool GLInterface::CreateImageTexture(MemoryImage *theImage)
 
 	TextureData *aData = (TextureData*)theImage->mD3DData;
 	aData->CheckCreateTextures(theImage);
-	
+
+	u32 total = 0;
+	ImageSet::iterator anItr;
+	for(anItr = mImageSet.begin(); anItr != mImageSet.end(); ++anItr)
+	{
+		MemoryImage *anImage = *anItr;
+		total += ((TextureData*)anImage->mD3DData)->mTexMemSize;
+	}
+	printf("total memory: %.2f MB, %.2f KB\n", total/1024.f/1024.f, total/1024.f);
+
 	if (wantPurge)
 		theImage->PurgeBits();
 
