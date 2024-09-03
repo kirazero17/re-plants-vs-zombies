@@ -3158,6 +3158,7 @@ void LawnApp::PreloadForUser()
 		return;
 	}
 
+	/*
 	ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_PUFF, true);
 	ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_LAWN_MOWERED_ZOMBIE, true);
 	ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_READYSETPLANT, true);
@@ -3232,6 +3233,7 @@ void LawnApp::PreloadForUser()
 			}
 		}
 	}
+	*/
 
 	if (mCompletedLoadingThreadTasks != aNumTasks)
 	{
