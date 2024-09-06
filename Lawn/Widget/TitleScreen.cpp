@@ -58,6 +58,8 @@ TitleScreen::~TitleScreen()
 	FONT_BRIANNETOD16 = mApp->mResourceManager->LoadFont("FONT_BRIANNETOD16");
 	IMAGE_PVZ_LOGO = mApp->mResourceManager->LoadImage("IMAGE_PVZ_LOGO");
 	IMAGE_REANIM_SODROLLCAP = mApp->mResourceManager->LoadImage("IMAGE_REANIM_SODROLLCAP");
+	SOUND_LOADINGBAR_FLOWER = mApp->mResourceManager->LoadSound("SOUND_LOADINGBAR_FLOWER");
+	SOUND_BUTTONCLICK = mApp->mResourceManager->LoadSound("SOUND_BUTTONCLICK");
 }
 
 void TitleScreen::DrawToPreload(Graphics* g)
