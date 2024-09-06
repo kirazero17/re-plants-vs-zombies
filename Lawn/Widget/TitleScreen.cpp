@@ -56,6 +56,8 @@ TitleScreen::~TitleScreen()
 	// free memory used by title screen since we won't see it again
 	mApp->mResourceManager->DeleteResources("LoaderBar");
 	FONT_BRIANNETOD16 = mApp->mResourceManager->LoadFont("FONT_BRIANNETOD16");
+	IMAGE_PVZ_LOGO = mApp->mResourceManager->LoadImage("IMAGE_PVZ_LOGO");
+	IMAGE_REANIM_SODROLLCAP = mApp->mResourceManager->LoadImage("IMAGE_REANIM_SODROLLCAP");
 }
 
 void TitleScreen::DrawToPreload(Graphics* g)
