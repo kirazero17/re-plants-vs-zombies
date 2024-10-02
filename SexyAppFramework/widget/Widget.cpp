@@ -29,8 +29,10 @@ Widget::Widget()
 
 Widget::~Widget()
 {	
+#ifdef LOW_MEMORY
 	for (std::string& resource : mLoadedResourceNames)
 		gSexyAppBase->mResourceManager->DeleteResources(resource.c_str());
+#endif
 
 	mColors.clear();
 }

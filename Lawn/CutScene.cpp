@@ -106,8 +106,10 @@ CutScene::~CutScene()
 	}
 	mApp->mMuteSoundsForCutscene = false;
 
+#ifdef LOW_MEMORY
 	for (std::string& resource : mLoadedResourceNames)
 		mApp->mResourceManager->DeleteResources(resource.c_str());
+#endif
 }
 
 //0x439140

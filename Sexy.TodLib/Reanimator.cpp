@@ -1162,7 +1162,7 @@ void ReanimatorLoadDefinitions(ReanimationParams* theReanimationParamArray, int 
 	gReanimatorDefCount = theReanimationParamArraySize;
 	gReanimatorDefArray = new ReanimatorDefinition[theReanimationParamArraySize];
 
-	/*
+#ifndef LOW_MEMORY
 	for (unsigned int i = 0; i < gReanimationParamArraySize; i++)
 	{
 		ReanimationParams* aReanimationParams = &theReanimationParamArray[i];
@@ -1170,7 +1170,7 @@ void ReanimatorLoadDefinitions(ReanimationParams* theReanimationParamArray, int 
 		if (DefinitionIsCompiled(StringToSexyString(aReanimationParams->mReanimFileName)))
 			ReanimatorEnsureDefinitionLoaded(aReanimationParams->mReanimationType, true);
 	}
-	*/
+#endif
 }
 
 //0x473870

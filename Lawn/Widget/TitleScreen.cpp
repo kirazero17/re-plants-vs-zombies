@@ -54,6 +54,7 @@ TitleScreen::~TitleScreen()
 		delete mStartButton;
 	}
 
+#ifdef LOW_MEMORY
 	// free memory used by title screen since we won't see it again
 	mApp->mResourceManager->DeleteResources("LoaderBar");
 	FONT_BRIANNETOD16 = mApp->mResourceManager->LoadFont("FONT_BRIANNETOD16");
@@ -61,6 +62,7 @@ TitleScreen::~TitleScreen()
 	IMAGE_REANIM_SODROLLCAP = mApp->mResourceManager->LoadImage("IMAGE_REANIM_SODROLLCAP");
 	SOUND_LOADINGBAR_FLOWER = mApp->mSoundManager->LoadSound(mApp->mSoundManager->GetFreeSoundId(), "sounds/loadingbar_flower");
 	SOUND_BUTTONCLICK = mApp->mSoundManager->LoadSound(mApp->mSoundManager->GetFreeSoundId(), "sounds/buttonclick");
+#endif
 }
 
 void TitleScreen::DrawToPreload(Graphics* g)
