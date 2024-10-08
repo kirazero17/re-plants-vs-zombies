@@ -2817,7 +2817,7 @@ void Challenge::WhackAZombieSpawning()
 	{
 		mBoard->mZombieCountDown = 2000;
 		mBoard->mZombieCountDownStart = mBoard->mZombieCountDown;
-		mBoard->mCurrentWave++;
+		if (mBoard->mCurrentWave < mBoard->mNumWaves) mBoard->mCurrentWave++;
 		mChallengeStateCounter = mBoard->mCurrentWave == mBoard->mNumWaves ? 300 : 1;
 	}
 	else if (mBoard->mZombieCountDown < 300)
