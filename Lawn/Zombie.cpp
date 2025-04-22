@@ -9402,7 +9402,7 @@ bool Zombie::SetupDrawZombieWon(Graphics* g)
         g->ClipRect(-172 - mX, -mY, BOARD_WIDTH, BOARD_HEIGHT);
         break;
     case BackgroundType::BACKGROUND_5_ROOF:
-    case BackgroundType::BACKGROUND_6_BOSS:
+    case BackgroundType::BACKGROUND_6_MOON:
         g->ClipRect(-220 - mX, -mY, BOARD_WIDTH, 187);
         break;
     default:
@@ -9679,7 +9679,7 @@ bool Zombie::IsDeadOrDying()
 //0x534730
 void Zombie::UpdateZombieChimney()
 {
-    if (mBoard->mBackground == BackgroundType::BACKGROUND_5_ROOF || mBoard->mBackground == BackgroundType::BACKGROUND_6_BOSS)
+    if (mBoard->mBackground == BackgroundType::BACKGROUND_5_ROOF || mBoard->mBackground == BackgroundType::BACKGROUND_6_MOON)
     {
         mAltitude = TodAnimateCurve(4000, 5000, mBoard->mCutScene->mCutsceneTime, 200, 0, TodCurves::CURVE_EASE_IN);
     }
@@ -9729,7 +9729,7 @@ void Zombie::WalkIntoHouse()
             }
         }
     }
-    else if (mBoard->mBackground == BackgroundType::BACKGROUND_5_ROOF || mBoard->mBackground == BackgroundType::BACKGROUND_6_BOSS)
+    else if (mBoard->mBackground == BackgroundType::BACKGROUND_5_ROOF || mBoard->mBackground == BackgroundType::BACKGROUND_6_MOON)
     {
         mPosX = -180.0f;
         mPosY = 250.0f;

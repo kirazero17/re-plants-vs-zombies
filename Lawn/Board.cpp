@@ -867,7 +867,7 @@ void Board::LoadBackgroundImages()
 		mLoadedResourceNames.push_back("DelayLoad_Background5");
 		break;
 
-	case BackgroundType::BACKGROUND_6_BOSS:
+	case BackgroundType::BACKGROUND_6_MOON:
 		mLoadedResourceNames.push_back("DelayLoad_Background6");
 		break;
 
@@ -930,7 +930,7 @@ void Board::PickBackground()
 		}
 		else if (mLevel == FINAL_LEVEL)
 		{
-			mBackground = BackgroundType::BACKGROUND_6_BOSS;
+			mBackground = BackgroundType::BACKGROUND_6_MOON;
 		}
 		else
 		{
@@ -1022,7 +1022,7 @@ void Board::PickBackground()
 		break;
 
 	case GameMode::GAMEMODE_CHALLENGE_FINAL_BOSS:
-		mBackground = BackgroundType::BACKGROUND_6_BOSS;
+		mBackground = BackgroundType::BACKGROUND_6_MOON;
 		break;
 
 	case GameMode::GAMEMODE_CHALLENGE_ZOMBIQUARIUM:
@@ -1091,7 +1091,7 @@ void Board::PickBackground()
 		mPlantRow[4] = PlantRowType::PLANTROW_NORMAL;
 		mPlantRow[5] = PlantRowType::PLANTROW_NORMAL;
 	}
-	else if (mBackground == BackgroundType::BACKGROUND_5_ROOF || mBackground == BackgroundType::BACKGROUND_6_BOSS)
+	else if (mBackground == BackgroundType::BACKGROUND_5_ROOF || mBackground == BackgroundType::BACKGROUND_6_MOON)
 	{
 		mPlantRow[0] = PlantRowType::PLANTROW_NORMAL;
 		mPlantRow[1] = PlantRowType::PLANTROW_NORMAL;
@@ -6097,7 +6097,7 @@ void Board::DrawBackdrop(Graphics* g)
 	case BackgroundType::BACKGROUND_3_POOL:				aBgImage = Sexy::IMAGE_BACKGROUND3;						break;
 	case BackgroundType::BACKGROUND_4_FOG:				aBgImage = Sexy::IMAGE_BACKGROUND4;						break;
 	case BackgroundType::BACKGROUND_5_ROOF:				aBgImage = Sexy::IMAGE_BACKGROUND5;						break;
-	case BackgroundType::BACKGROUND_6_BOSS:				aBgImage = Sexy::IMAGE_BACKGROUND6BOSS;					break;
+	case BackgroundType::BACKGROUND_6_MOON:				aBgImage = Sexy::IMAGE_BACKGROUND6BOSS;					break;
 	case BackgroundType::BACKGROUND_MUSHROOM_GARDEN:	aBgImage = Sexy::IMAGE_BACKGROUND_MUSHROOMGARDEN;		break;
 	case BackgroundType::BACKGROUND_GREENHOUSE:			aBgImage = Sexy::IMAGE_BACKGROUND_GREENHOUSE;			break;
 	case BackgroundType::BACKGROUND_ZOMBIQUARIUM:		aBgImage = Sexy::IMAGE_AQUARIUM1;						break;
@@ -6886,7 +6886,7 @@ void Board::DrawHouseDoorTop(Graphics* g)
 	case BackgroundType::BACKGROUND_3_POOL:		g->DrawImage(Sexy::IMAGE_BACKGROUND3_GAMEOVER_MASK, -172, 234);		break;
 	case BackgroundType::BACKGROUND_4_FOG:		g->DrawImage(Sexy::IMAGE_BACKGROUND4_GAMEOVER_MASK, -173, 133);		break;
 	case BackgroundType::BACKGROUND_5_ROOF:		g->DrawImage(Sexy::IMAGE_BACKGROUND5_GAMEOVER_MASK, -220, 81);		break;
-	case BackgroundType::BACKGROUND_6_BOSS:		g->DrawImage(Sexy::IMAGE_BACKGROUND6_GAMEOVER_MASK, -220, 81);		break;
+	case BackgroundType::BACKGROUND_6_MOON:		g->DrawImage(Sexy::IMAGE_BACKGROUND6_GAMEOVER_MASK, -220, 81);		break;
 	default:																										break;
 	}
 }
@@ -8964,7 +8964,7 @@ bool Board::StageIsNight()
 	return 
 		mBackground == BackgroundType::BACKGROUND_2_NIGHT || 
 		mBackground == BackgroundType::BACKGROUND_4_FOG || 
-		mBackground == BackgroundType::BACKGROUND_6_BOSS ||
+		mBackground == BackgroundType::BACKGROUND_6_MOON ||
 		mBackground == BackgroundType::BACKGROUND_MUSHROOM_GARDEN || 
 		mBackground == BackgroundType::BACKGROUND_ZOMBIQUARIUM;
 }
@@ -8988,7 +8988,7 @@ bool Board::StageHasGraveStones()
 //0x41C0B0
 bool Board::StageHasRoof()
 {
-	return (mBackground == BackgroundType::BACKGROUND_5_ROOF || mBackground == BackgroundType::BACKGROUND_6_BOSS);
+	return (mBackground == BackgroundType::BACKGROUND_5_ROOF || mBackground == BackgroundType::BACKGROUND_6_MOON);
 }
 
 //0x41C0D0
